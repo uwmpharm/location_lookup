@@ -130,7 +130,7 @@
   .config-btn-sec { background: transparent; color: var(--text-secondary); border: 1.5px solid var(--border-strong); }
 </style>
 
-<div class="app" id="app">
+<!--<div class="app" id="app">
   <div class="auth-overlay" id="authOverlay">
     <div class="auth-card">
       <div class="auth-logo">UW <span>Medicine</span></div>
@@ -143,7 +143,7 @@
       <button class="auth-btn" id="authBtn" onclick="handleAuth()">Sign In</button>
       <div class="auth-domain-hint">Access restricted to UW Medicine organization accounts</div>
     </div>
-  </div>
+  </div>-->
 
   <div class="header">
     <div class="header-brand">
@@ -214,9 +214,9 @@ const SITE_TO_PYXIS = {
   'NWH-MAIN': 'NWH-PYXIS'
 };
 
-const ALLOWED_DOMAINS = ['uw.edu'];
+//const ALLOWED_DOMAINS = ['uw.edu'];
 
-function init() {
+/*function init() {
   const siteSelect = document.getElementById('siteSelect');
   if (currentSite) siteSelect.value = currentSite;
 
@@ -231,6 +231,20 @@ function init() {
   const session = localStorage.getItem('pdif_session');
   if (session) {
     document.getElementById('authOverlay').style.display = 'none';
+  }
+}*/
+
+function init() {
+  const siteSelect = document.getElementById('siteSelect');
+  if (currentSite) siteSelect.value = currentSite;
+
+  const savedUrl = localStorage.getItem('pdif_url') || DEFAULT_URL;
+  const savedKey = localStorage.getItem('pdif_key') || DEFAULT_KEY;
+
+  if (savedUrl && savedKey) {
+    document.getElementById('cfgUrl').value = savedUrl;
+    document.getElementById('cfgKey').value = savedKey;
+    initSupabase(savedUrl, savedKey);
   }
 }
 
@@ -268,7 +282,7 @@ function onSiteChange() {
   if (q.length >= 2) doSearch(q);
 }
 
-async function handleAuth() {
+/*async function handleAuth() {
   const email = document.getElementById('authEmail').value.trim();
   const pass = document.getElementById('authPassword').value;
   const btn = document.getElementById('authBtn');
@@ -311,7 +325,7 @@ function showAuthError(msg) {
   el.className = 'auth-error';
   el.textContent = msg;
   el.style.display = 'block';
-}
+}*/
 
 function onSearch() {
   clearTimeout(searchTimer);
