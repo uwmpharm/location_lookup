@@ -23,12 +23,9 @@
       --green: #0f6e56;
       --green-bg: #e1f5ee;
       --radius: 10px;
-      --radius-lg: 14px;
     }
 
-    body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text-primary); font-size: 15px; }
-
-    .app { display: flex; flex-direction: column; min-height: 100vh; }
+    body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text-primary); }
 
     .header { 
       background: var(--uw-purple); 
@@ -37,64 +34,71 @@
       display: flex; 
       align-items: center; 
       justify-content: space-between; 
-      height: 56px; 
+      height: 60px; 
       border-bottom: 3px solid var(--uw-gold); 
     }
-    .header-brand { display: flex; align-items: center; gap: 12px; }
-    .header-logo { font-family: 'Source Serif 4', serif; font-size: 17px; font-weight: 600; color: white; }
-    .header-logo span { color: var(--uw-gold); }
     
-    .site-select-container { display: flex; align-items: center; gap: 10px; }
+    .header-logo { font-family: 'Source Serif 4', serif; font-size: 18px; font-weight: 600; color: white; }
+    .header-logo span { color: var(--uw-gold); }
+
+    .site-controls { display: flex; align-items: center; gap: 12px; }
     .site-select { 
-      background: rgba(255,255,255,0.12); 
-      border: 1px solid var(--uw-gold); 
-      color: white; 
+      background: white; 
+      border: 2px solid var(--uw-gold); 
+      color: var(--uw-purple); 
       font-size: 14px; 
-      font-weight: 600; 
+      font-weight: 700; 
       padding: 6px 12px; 
       border-radius: 6px; 
-      cursor: pointer; 
+      cursor: pointer;
+      outline: none;
     }
-    .site-select option { background: var(--uw-purple); color: white; }
 
-    .search-zone { background: var(--uw-purple); padding: 30px 24px; text-align: center; }
+    .search-zone { background: var(--uw-purple); padding: 35px 24px; }
     .search-wrap { position: relative; max-width: 600px; margin: 0 auto; }
     .search-input { 
       width: 100%; 
-      height: 50px; 
+      height: 54px; 
       padding: 0 20px; 
-      border: 2px solid rgba(255,255,255,0.2); 
+      border: 3px solid rgba(255,255,255,0.2); 
       border-radius: var(--radius); 
-      background: rgba(255,255,255,0.08); 
+      background: rgba(255,255,255,0.05); 
       color: white; 
-      font-size: 16px; 
+      font-size: 18px; 
       outline: none; 
-      transition: all 0.2s;
+      transition: all 0.25s ease;
+      opacity: 0.4;
+      cursor: not-allowed;
     }
-    .search-input:disabled { opacity: 0.4; cursor: not-allowed; background: rgba(0,0,0,0.1); }
-    .search-input:focus:not(:disabled) { border-color: var(--uw-gold); background: rgba(255,255,255,0.15); }
+    
+    /* Active State for Search Input */
+    .search-input.enabled {
+      opacity: 1;
+      cursor: text;
+      background: rgba(255,255,255,0.15);
+      border-color: var(--uw-gold);
+    }
 
-    .main { flex: 1; padding: 24px; max-width: 800px; width: 100%; margin: 0 auto; }
+    .main { flex: 1; padding: 24px; max-width: 850px; width: 100%; margin: 0 auto; }
 
-    /* Result Cards */
-    .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; }
-    .result-top { display: flex; justify-content: space-between; margin-bottom: 10px; }
-    .result-description { font-size: 16px; font-weight: 600; color: var(--uw-purple); }
-    .tag { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+    .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+    .result-top { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start; }
+    .result-description { font-size: 17px; font-weight: 600; color: var(--uw-purple); line-height: 1.2; }
+    .tag { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
     .tag-inventory { background: var(--green-bg); color: var(--green); }
     .tag-forward { background: #fff7e0; color: #7a5200; }
     
-    .result-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-    .field { background: var(--bg); padding: 8px; border-radius: 6px; }
-    .label { font-size: 11px; color: var(--text-hint); font-weight: 600; text-transform: uppercase; }
-    .value { font-size: 14px; font-weight: 600; }
-    .mono { font-family: monospace; }
+    .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .field { background: var(--bg); padding: 10px; border-radius: 8px; }
+    .label { font-size: 11px; color: var(--text-hint); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+    .value { font-size: 15px; font-weight: 600; font-family: 'Source Sans 3', sans-serif; }
+    .mono { font-family: monospace; font-size: 14px; }
 
-    .pyxis-row { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
-    .pyxis-pill { display: inline-block; background: var(--uw-purple-light); color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 5px; font-family: monospace;}
+    .pyxis-row { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+    .pyxis-pill { background: var(--uw-purple); color: white; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; font-family: monospace; }
 
-    .state-msg { text-align: center; padding: 40px; color: var(--text-secondary); }
-    .spinner { width: 30px; height: 30px; border: 3px solid #ddd; border-top: 3px solid var(--uw-purple); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto; }
+    .state-msg { text-align: center; padding: 50px 20px; color: var(--text-secondary); }
+    .spinner { width: 34px; height: 34px; border: 4px solid #e0e0e0; border-top: 4px solid var(--uw-purple); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
@@ -102,14 +106,11 @@
 
 <div class="app">
   <div class="header">
-    <div class="header-brand">
-      <div class="header-logo">UW <span>Medicine</span></div>
-      <div class="header-divider"></div>
-    </div>
-    <div class="site-select-container">
-      <span style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.7)">LOCATION:</span>
-      <select class="site-select" id="siteSelect" onchange="onSiteChange()">
-        <option value="">Select Location...</option>
+    <div class="header-logo">UW <span>Medicine</span></div>
+    <div class="site-controls">
+      <span style="font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.8)">SITE:</span>
+      <select class="site-select" id="siteSelect">
+        <option value="">— SELECT SITE —</option>
         <option value="HMC-MAIN">Harborview</option>
         <option value="UWMC-MAIN">Montlake</option>
         <option value="NWH-MAIN">Northwest</option>
@@ -119,70 +120,72 @@
 
   <div class="search-zone">
     <div class="search-wrap">
-      <input class="search-input" id="searchInput" type="text" placeholder="Select a location first..." disabled oninput="onSearch()" />
+      <input class="search-input" id="searchInput" type="text" placeholder="Select a location first..." disabled autocomplete="off" />
     </div>
   </div>
 
   <div class="main" id="stateArea">
-    <div class="state-msg">
-      <h3>Welcome</h3>
-      <p>Please select your hospital location in the header to begin searching.</p>
     </div>
-  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
+/** * CONNECTIVITY 
+ */
 const DEFAULT_URL = 'https://iynuqsbgnshlromwkzfl.supabase.co';
 const DEFAULT_KEY = 'sb_publishable_qYy0w0btGs67ASUw8rIPug_Ken-W5AF';
+const supabase = window.supabase.createClient(DEFAULT_URL, DEFAULT_KEY);
 
-let supabase = window.supabase.createClient(DEFAULT_URL, DEFAULT_KEY);
 let currentSite = localStorage.getItem('pdif_site') || '';
 let searchTimer = null;
 
-function init() {
-  const siteSelect = document.getElementById('siteSelect');
-  const searchInput = document.getElementById('searchInput');
+/** * ELEMENT SELECTORS 
+ */
+const siteSelect = document.getElementById('siteSelect');
+const searchInput = document.getElementById('searchInput');
+const stateArea = document.getElementById('stateArea');
 
+/** * EVENT LISTENERS 
+ */
+siteSelect.addEventListener('change', (e) => {
+  currentSite = e.target.value;
+  localStorage.setItem('pdif_site', currentSite);
+  updateInputState();
+});
+
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  const q = searchInput.value.trim();
+  if (q.length < 2) { renderIdle(); return; }
+  searchTimer = setTimeout(() => doSearch(q), 200);
+});
+
+/** * LOGIC 
+ */
+function init() {
   if (currentSite) {
     siteSelect.value = currentSite;
-    searchInput.disabled = false;
-    searchInput.placeholder = "Search inventory...";
-    renderIdle();
   }
+  updateInputState();
 }
 
-function onSiteChange() {
-  const siteSelect = document.getElementById('siteSelect');
-  const searchInput = document.getElementById('searchInput');
-  
-  currentSite = siteSelect.value.trim();
-  localStorage.setItem('pdif_site', currentSite);
-
-  if (currentSite) {
+function updateInputState() {
+  if (currentSite && currentSite !== "") {
     searchInput.disabled = false;
-    searchInput.placeholder = "Search inventory...";
-    searchInput.focus();
+    searchInput.classList.add('enabled');
+    searchInput.placeholder = "Search inventory at " + siteSelect.options[siteSelect.selectedIndex].text + "...";
     renderIdle();
   } else {
     searchInput.disabled = true;
+    searchInput.classList.remove('enabled');
     searchInput.placeholder = "Select a location first...";
     searchInput.value = "";
     renderWelcome();
   }
 }
 
-function onSearch() {
-  clearTimeout(searchTimer);
-  const q = document.getElementById('searchInput').value.trim();
-  if (q.length < 2) { renderIdle(); return; }
-  searchTimer = setTimeout(() => doSearch(q), 200);
-}
-
 async function doSearch(q) {
-  // CRITICAL CHECK - Diagnostic for space/length issues
-  console.log("CRITICAL CHECK - Site String: '" + currentSite + "' (Length: " + currentSite.length + ")");
-
+  console.log("SEARCHING - Site:", currentSite, "Query:", q);
   renderState('<div class="spinner"></div>');
 
   try {
@@ -196,30 +199,36 @@ async function doSearch(q) {
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      renderState(`<div class="state-msg"><h3>No Results</h3><p>No matches found for "${q}" at ${getSiteLabel(currentSite)}.</p></div>`);
+      renderState(`<div class="state-msg"><h3>No Results</h3><p>No matches for "${q}" at this site.</p></div>`);
       return;
     }
-
     renderResults(data, q);
   } catch (e) {
-    renderState(`<div class="state-msg"><h3 style="color:red">Error</h3><p>${e.message}</p></div>`);
+    renderState(`<div class="state-msg"><h3 style="color:var(--red)">Connection Error</h3><p>${e.message}</p></div>`);
   }
 }
 
+/** * UI RENDERING 
+ */
 function renderResults(items, q) {
-  let html = `<div style="margin-bottom:15px; font-size:13px; color:var(--text-secondary)">Showing ${items.length} results for "<strong>${q}</strong>"</div>`;
+  let html = `<div style="margin-bottom:15px; font-size:13px; color:var(--text-secondary)">Found ${items.length} items for "<strong>${q}</strong>"</div>`;
 
   items.forEach(r => {
+    // Defensive check to prevent "undefined" errors
+    if (!r) return;
+
     const isInv = r.location_type === 'Inventory';
     const tagClass = isInv ? 'tag-inventory' : 'tag-forward';
-    const tagLabel = isInv ? 'In Stock' : 'Forward Pick';
-    const qtyText = (r.quantity === null) ? '0' : r.quantity;
-    const qtyClass = parseFloat(qtyText) <= 0 ? 'color:var(--red)' : 'color:var(--green)';
+    const tagLabel = isInv ? '✓ In Stock' : '⊘ Fallback Location';
+    
+    // Formatting quantity
+    const rawQty = r.quantity === null ? 0 : r.quantity;
+    const qtyClass = parseFloat(rawQty) <= 0 ? 'color:var(--red)' : 'color:var(--green)';
 
     html += `
     <div class="result-card">
       <div class="result-top">
-        <div class="result-description">${r.item_description || 'Unknown Item'}</div>
+        <div class="result-description">${r.item_description || 'Unknown medication'}</div>
         <span class="tag ${tagClass}">${tagLabel}</span>
       </div>
       <div class="result-grid">
@@ -229,33 +238,28 @@ function renderResults(items, q) {
         </div>
         <div class="field">
           <div class="label">Quantity</div>
-          <div class="value" style="${qtyClass}">${qtyText} <small style="color:var(--text-hint)">${r.uom || ''}</small></div>
+          <div class="value" style="${qtyClass}">${rawQty} <small style="color:var(--text-hint)">${r.uom || ''}</small></div>
         </div>
         <div class="field">
-          <div class="label">Item ID</div>
-          <div class="value mono">${r.item}</div>
+          <div class="label">Internal ID</div>
+          <div class="value mono">${r.item || 'N/A'}</div>
         </div>
       </div>
-      ${r.pyxis_id ? `<div class="pyxis-row"><span class="label">Pyxis ID:</span><span class="pyxis-pill">${r.pyxis_id}</span></div>` : ''}
+      ${r.pyxis_id ? `<div class="pyxis-row"><span class="label" style="margin-right:5px">Pyxis ID:</span><span class="pyxis-pill">${r.pyxis_id}</span></div>` : ''}
     </div>`;
   });
   renderState(html);
 }
 
-function getSiteLabel(val) {
-  const map = { 'HMC-MAIN': 'Harborview', 'UWMC-MAIN': 'Montlake', 'NWH-MAIN': 'Northwest' };
-  return map[val] || val;
+function renderWelcome() {
+  renderState('<div class="state-msg"><h3>Welcome</h3><p>Select your hospital site in the top right to start searching.</p></div>');
 }
 
 function renderIdle() {
-  renderState('<div class="state-msg"><h3>Ready to Search</h3><p>Enter an item description, ID, or Pyxis label.</p></div>');
+  renderState('<div class="state-msg"><h3>Ready</h3><p>Enter a medication name, Item ID, or Pyxis ID.</p></div>');
 }
 
-function renderWelcome() {
-  renderState('<div class="state-msg"><h3>Welcome</h3><p>Please select your hospital location in the header to begin searching.</p></div>');
-}
-
-function renderState(html) { document.getElementById('stateArea').innerHTML = html; }
+function renderState(html) { stateArea.innerHTML = html; }
 
 init();
 </script>
