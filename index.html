@@ -1,150 +1,166 @@
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&family=Source+Serif+4:wght@400;600&display=swap');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pharmacy Downtime Inventory Finder | UW Medicine</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&family=Source+Serif+4:wght@400;600&display=swap');
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --uw-purple: #32006e;
-    --uw-purple-mid: #54348b;
-    --uw-purple-light: #9663a8;
-    --uw-gold: #FFC700;
-    --uw-gold-light: #fff3b0;
-    --uw-teal: #008895;
-    --uw-teal-light: #e1f5ee;
-    --bg: #f5f3f8;
-    --surface: #ffffff;
-    --border: rgba(50,0,110,0.12);
-    --border-strong: rgba(50,0,110,0.25);
-    --text-primary: #1a0a2e;
-    --text-secondary: #5a4a7a;
-    --text-hint: #9685b4;
-    --red: #d24310;
-    --red-bg: #fdf0ea;
-    --green: #0f6e56;
-    --green-bg: #e1f5ee;
-    --radius: 10px;
-    --radius-lg: 14px;
-  }
+    :root {
+      --uw-purple: #32006e;
+      --uw-purple-mid: #54348b;
+      --uw-purple-light: #9663a8;
+      --uw-gold: #FFC700;
+      --uw-gold-light: #fff3b0;
+      --uw-teal: #008895;
+      --uw-teal-light: #e1f5ee;
+      --bg: #f5f3f8;
+      --surface: #ffffff;
+      --border: rgba(50,0,110,0.12);
+      --border-strong: rgba(50,0,110,0.25);
+      --text-primary: #1a0a2e;
+      --text-secondary: #5a4a7a;
+      --text-hint: #9685b4;
+      --red: #d24310;
+      --red-bg: #fdf0ea;
+      --green: #0f6e56;
+      --green-bg: #e1f5ee;
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
 
-  body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text-primary); font-size: 15px; line-height: 1.5; }
+    body { 
+      font-family: 'Source Sans 3', sans-serif; 
+      background: var(--bg); 
+      color: var(--text-primary); 
+      font-size: 15px; 
+      line-height: 1.5; 
+    }
 
-  .app { display: flex; flex-direction: column; min-height: 100vh; }
+    .app { display: flex; flex-direction: column; min-height: 100vh; }
 
-  /* HEADER */
-  .header { background: var(--uw-purple); color: white; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; border-bottom: 3px solid var(--uw-gold); flex-shrink: 0; }
-  .header-brand { display: flex; align-items: center; gap: 12px; }
-  .header-logo { font-family: 'Source Serif 4', serif; font-size: 17px; font-weight: 600; letter-spacing: -0.2px; color: white; }
-  .header-logo span { color: var(--uw-gold); }
-  .header-divider { width: 1px; height: 24px; background: rgba(255,255,255,0.25); }
-  .header-title { font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.8); letter-spacing: 0.3px; }
-  .site-badge { display: flex; align-items: center; gap: 8px; }
-  .site-select { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: white; font-size: 13px; font-weight: 500; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-family: inherit; }
-  .site-select option { background: var(--uw-purple); color: white; }
-  .downtime-badge { background: #d24310; color: white; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; padding: 3px 8px; border-radius: 4px; }
+    /* HEADER */
+    .header { 
+      background: var(--uw-purple); 
+      color: white; 
+      padding: 0 24px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      height: 56px; 
+      border-bottom: 3px solid var(--uw-gold); 
+      flex-shrink: 0; 
+    }
+    .header-brand { display: flex; align-items: center; gap: 12px; }
+    .header-logo { font-family: 'Source Serif 4', serif; font-size: 17px; font-weight: 600; letter-spacing: -0.2px; color: white; }
+    .header-logo span { color: var(--uw-gold); }
+    .header-divider { width: 1px; height: 24px; background: rgba(255,255,255,0.25); }
+    .header-title { font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.8); letter-spacing: 0.3px; }
+    
+    .site-badge { display: flex; align-items: center; gap: 8px; }
+    .site-select { 
+      background: rgba(255,255,255,0.12); 
+      border: 1px solid rgba(255,255,255,0.25); 
+      color: white; 
+      font-size: 13px; 
+      font-weight: 500; 
+      padding: 5px 10px; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-family: inherit; 
+    }
+    .site-select option { background: var(--uw-purple); color: white; }
+    .downtime-badge { background: #d24310; color: white; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; padding: 3px 8px; border-radius: 4px; }
 
-  /* SEARCH ZONE */
-  .search-zone { background: var(--uw-purple); padding: 28px 24px 32px; }
-  .search-label { color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 10px; }
-  .search-wrap { position: relative; max-width: 680px; }
-  .search-input { width: 100%; height: 48px; padding: 0 48px 0 18px; border: 2px solid rgba(255,255,255,0.2); border-radius: var(--radius); background: rgba(255,255,255,0.08); color: white; font-size: 16px; font-family: inherit; transition: all 0.2s; outline: none; }
-  .search-input::placeholder { color: rgba(255,255,255,0.4); }
-  .search-input:focus { border-color: var(--uw-gold); background: rgba(255,255,255,0.12); }
-  .search-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.5); font-size: 18px; pointer-events: none; }
-  .search-hint { margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.5); }
-  .search-hint strong { color: rgba(255,255,255,0.75); font-weight: 500; }
+    /* SEARCH ZONE */
+    .search-zone { background: var(--uw-purple); padding: 28px 24px 32px; }
+    .search-label { color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 10px; }
+    .search-wrap { position: relative; max-width: 680px; }
+    .search-input { 
+      width: 100%; 
+      height: 48px; 
+      padding: 0 48px 0 18px; 
+      border: 2px solid rgba(255,255,255,0.2); 
+      border-radius: var(--radius); 
+      background: rgba(255,255,255,0.08); 
+      color: white; 
+      font-size: 16px; 
+      font-family: inherit; 
+      transition: all 0.2s; 
+      outline: none; 
+    }
+    .search-input::placeholder { color: rgba(255,255,255,0.4); }
+    .search-input:focus { border-color: var(--uw-gold); background: rgba(255,255,255,0.12); }
+    .search-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.5); font-size: 18px; pointer-events: none; }
+    .search-hint { margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.5); }
+    .search-hint strong { color: rgba(255,255,255,0.75); font-weight: 500; }
 
-  /* MAIN CONTENT */
-  .main { flex: 1; padding: 24px; max-width: 900px; width: 100%; margin: 0 auto; }
+    /* MAIN CONTENT */
+    .main { flex: 1; padding: 24px; max-width: 900px; width: 100%; margin: 0 auto; }
 
-  /* STATES */
-  .state-idle { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px; text-align: center; }
-  .state-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.4; }
-  .state-title { font-size: 17px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
-  .state-sub { font-size: 14px; color: var(--text-hint); }
+    /* CONFIGURATION */
+    .config-banner { background: #fff7e0; border: 1px solid rgba(122,82,0,0.2); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #5c3d00; }
+    .config-banner strong { font-weight: 600; }
+    .config-link { color: var(--uw-purple); font-weight: 500; cursor: pointer; text-decoration: underline; }
 
-  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--uw-purple); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 40px auto; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+    .config-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px; }
+    .config-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; }
+    .config-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .config-input { flex: 1; height: 38px; padding: 0 12px; border: 1.5px solid var(--border-strong); border-radius: 8px; font-size: 13px; font-family: monospace; color: var(--text-primary); outline: none; }
+    .config-input:focus { border-color: var(--uw-purple); }
+    .config-btn { height: 38px; padding: 0 16px; background: var(--uw-purple); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; }
+    .config-btn-sec { background: transparent; color: var(--text-secondary); border: 1.5px solid var(--border-strong); }
 
-  /* RESULTS */
-  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-  .results-count { font-size: 13px; color: var(--text-secondary); }
-  .results-count strong { color: var(--text-primary); font-weight: 600; }
+    /* STATES */
+    .state-idle { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px; text-align: center; }
+    .state-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.4; }
+    .state-title { font-size: 17px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+    .state-sub { font-size: 14px; color: var(--text-hint); }
 
-  .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 10px; transition: border-color 0.15s; }
-  .result-card:hover { border-color: var(--border-strong); }
+    .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--uw-purple); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 40px auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-  .result-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-  .result-names { flex: 1; min-width: 0; }
-  .result-description { font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.3; margin-bottom: 3px; }
-  .result-item-id { font-size: 12px; color: var(--text-hint); font-family: 'Source Sans 3', monospace; }
+    /* RESULTS */
+    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .results-count { font-size: 13px; color: var(--text-secondary); }
+    .results-count strong { color: var(--text-primary); font-weight: 600; }
 
-  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.4px; padding: 3px 8px; border-radius: 5px; flex-shrink: 0; }
-  .tag-inventory { background: var(--green-bg); color: var(--green); }
-  .tag-forward { background: #fff7e0; color: #7a5200; }
-  .tag-noresult { background: #f0f0f0; color: #666; }
+    .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 10px; transition: border-color 0.15s; }
+    .result-card:hover { border-color: var(--border-strong); }
 
-  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
-  .result-field { background: var(--bg); border-radius: 8px; padding: 8px 10px; }
-  .result-field-label { font-size: 11px; color: var(--text-hint); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-  .result-field-value { font-size: 14px; font-weight: 600; color: var(--text-primary); font-family: 'Source Sans 3', sans-serif; }
-  .result-field-value.mono { font-family: monospace; font-size: 13px; }
-  .result-field-value.empty { color: var(--text-hint); font-weight: 400; }
+    .result-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .result-names { flex: 1; min-width: 0; }
+    .result-description { font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.3; margin-bottom: 3px; }
+    .result-item-id { font-size: 12px; color: var(--text-hint); font-family: monospace; }
 
-  .qty-zero { color: var(--red); }
-  .qty-positive { color: var(--green); }
+    .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.4px; padding: 3px 8px; border-radius: 5px; flex-shrink: 0; }
+    .tag-inventory { background: var(--green-bg); color: var(--green); }
+    .tag-forward { background: #fff7e0; color: #7a5200; }
 
-  .pyxis-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .pyxis-label { font-size: 12px; color: var(--text-hint); font-weight: 500; }
-  .pyxis-pill { background: rgba(50,0,110,0.06); border: 1px solid rgba(50,0,110,0.15); color: var(--uw-purple-mid); font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 20px; font-family: monospace; }
+    .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+    .result-field { background: var(--bg); border-radius: 8px; padding: 8px 10px; }
+    .result-field-label { font-size: 11px; color: var(--text-hint); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .result-field-value { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .result-field-value.mono { font-family: monospace; font-size: 13px; }
 
-  .no-results { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; text-align: center; }
-  .no-results-title { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
-  .no-results-sub { font-size: 13px; color: var(--text-hint); }
+    .qty-zero { color: var(--red); }
+    .qty-positive { color: var(--green); }
 
-  /* AUTH */
-  .auth-overlay { position: fixed; inset: 0; background: var(--uw-purple); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
-  .auth-card { background: white; border-radius: 16px; padding: 40px 36px; max-width: 400px; width: 100%; }
-  .auth-logo { font-family: 'Source Serif 4', serif; font-size: 22px; font-weight: 600; color: var(--uw-purple); margin-bottom: 4px; }
-  .auth-logo span { color: var(--uw-gold); }
-  .auth-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 28px; }
-  .auth-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: block; }
-  .auth-input { width: 100%; height: 42px; padding: 0 14px; border: 1.5px solid var(--border-strong); border-radius: 8px; font-size: 15px; font-family: inherit; color: var(--text-primary); outline: none; margin-bottom: 14px; transition: border-color 0.15s; }
-  .auth-input:focus { border-color: var(--uw-purple); }
-  .auth-btn { width: 100%; height: 44px; background: var(--uw-purple); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background 0.15s; }
-  .auth-btn:hover { background: var(--uw-purple-mid); }
-  .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .auth-error { background: var(--red-bg); color: var(--red); font-size: 13px; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(210,67,16,0.2); }
-  .auth-domain-hint { font-size: 12px; color: var(--text-hint); margin-top: 12px; text-align: center; }
+    .pyxis-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .pyxis-label { font-size: 12px; color: var(--text-hint); font-weight: 500; }
+    .pyxis-pill { background: rgba(50,0,110,0.06); border: 1px solid rgba(50,0,110,0.15); color: var(--uw-purple-mid); font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 20px; font-family: monospace; }
 
-  /* CONFIG */
-  .config-banner { background: #fff7e0; border: 1px solid rgba(122,82,0,0.2); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #5c3d00; }
-  .config-banner strong { font-weight: 600; }
-  .config-link { color: var(--uw-purple); font-weight: 500; cursor: pointer; text-decoration: underline; }
+    .no-results { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; text-align: center; }
+    .no-results-title { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+    .no-results-sub { font-size: 13px; color: var(--text-hint); }
+  </style>
+</head>
+<body>
 
-  .config-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px; }
-  .config-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; }
-  .config-row { display: flex; gap: 10px; margin-bottom: 10px; }
-  .config-input { flex: 1; height: 38px; padding: 0 12px; border: 1.5px solid var(--border-strong); border-radius: 8px; font-size: 13px; font-family: monospace; color: var(--text-primary); outline: none; }
-  .config-input:focus { border-color: var(--uw-purple); }
-  .config-btn { height: 38px; padding: 0 16px; background: var(--uw-purple); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; }
-  .config-btn-sec { background: transparent; color: var(--text-secondary); border: 1.5px solid var(--border-strong); }
-</style>
-
-<!--<div class="app" id="app">
-  <div class="auth-overlay" id="authOverlay">
-    <div class="auth-card">
-      <div class="auth-logo">UW <span>Medicine</span></div>
-      <div class="auth-subtitle">Pharmacy Downtime Inventory Finder</div>
-      <div id="authError" style="display:none"></div>
-      <label class="auth-label">Email</label>
-      <input class="auth-input" id="authEmail" type="email" placeholder="user@uw.edu or @uwmedicine.org" />
-      <label class="auth-label">Password</label>
-      <input class="auth-input" id="authPassword" type="password" placeholder="••••••••" />
-      <button class="auth-btn" id="authBtn" onclick="handleAuth()">Sign In</button>
-      <div class="auth-domain-hint">Access restricted to UW Medicine organization accounts</div>
-    </div>
-  </div>-->
-
+<div class="app" id="app">
   <div class="header">
     <div class="header-brand">
       <div class="header-logo">UW <span>Medicine</span></div>
@@ -172,13 +188,12 @@
   </div>
 
   <div class="main" id="mainContent">
-    <div class="config-banner" id="configBanner">
-      <strong>Configuration required.</strong> Enter your Supabase project URL and anon key to connect to the live database. <span class="config-link" onclick="toggleConfig()">Configure connection →</span>
+    <div class="config-banner" id="configBanner" style="display:none">
+      <strong>Configuration needed.</strong> Unable to connect to database. <span class="config-link" onclick="toggleConfig()">Check settings →</span>
     </div>
 
     <div class="config-panel" id="configPanel" style="display:none">
       <div class="config-title">Supabase Connection</div>
-      <div style="font-size:12px;color:var(--text-hint);margin-bottom:12px;">Find these in your Supabase project → Settings → API</div>
       <div class="config-row">
         <input class="config-input" id="cfgUrl" placeholder="https://your-project.supabase.co" style="flex:2" />
         <input class="config-input" id="cfgKey" placeholder="anon public key..." style="flex:3" />
@@ -191,7 +206,7 @@
       <div class="state-idle">
         <div class="state-icon">⊕</div>
         <div class="state-title">Select a site and search for a medication</div>
-        <div class="state-sub">Results will show location, quantity, and Pyxis ID</div>
+        <div class="state-sub">Results show real-time location and quantity</div>
       </div>
     </div>
   </div>
@@ -199,57 +214,46 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-/** * CONFIGURATION & INITIALIZATION 
+/**
+ * APP INITIALIZATION
  */
 let supabase = null;
 let searchTimer = null;
 let currentSite = localStorage.getItem('pdif_site') || '';
 let isConfigured = false;
 
-// Hardcoded Credentials
+// Default Credentials
 const DEFAULT_URL = 'https://iynuqsbgnshlromwkzfl.supabase.co';
 const DEFAULT_KEY = 'sb_publishable_qYy0w0btGs67ASUw8rIPug_Ken-W5AF';
 
-const SITE_TO_PYXIS = {
-  'UWMC-MAIN': 'UWMC-PYXIS',
-  'HMC-MAIN': 'HMC-PYXIS',
-  'NWH-MAIN': 'NWH-PYXIS'
-};
-
 function init() {
-  // 1. Setup Site Selection
   const siteSelect = document.getElementById('siteSelect');
   if (currentSite) siteSelect.value = currentSite;
 
-  // 2. Automatically hide Auth Overlay (since we are using IP restriction)
-  const authOverlay = document.getElementById('authOverlay');
-  if (authOverlay) authOverlay.style.display = 'none';
-
-  // 3. Initialize Supabase with Hardcoded Credentials
   const savedUrl = localStorage.getItem('pdif_url') || DEFAULT_URL;
   const savedKey = localStorage.getItem('pdif_key') || DEFAULT_KEY;
 
-  if (savedUrl && savedKey) {
-    document.getElementById('cfgUrl').value = savedUrl;
-    document.getElementById('cfgKey').value = savedKey;
-    initSupabase(savedUrl, savedKey);
-  }
+  document.getElementById('cfgUrl').value = savedUrl;
+  document.getElementById('cfgKey').value = savedKey;
+
+  initSupabase(savedUrl, savedKey);
 }
 
 function initSupabase(url, key) {
   try {
     supabase = window.supabase.createClient(url, key);
     isConfigured = true;
-    // Hide the configuration banner once connected
     document.getElementById('configBanner').style.display = 'none';
     return true;
   } catch(e) {
+    document.getElementById('configBanner').style.display = 'block';
     console.error("Supabase connection failed:", e);
     return false;
   }
 }
 
-/** * UI & CONFIGURATION HELPERS 
+/**
+ * UI CONTROLS
  */
 function toggleConfig() {
   const panel = document.getElementById('configPanel');
@@ -260,13 +264,16 @@ function saveConfig() {
   const url = document.getElementById('cfgUrl').value.trim();
   const key = document.getElementById('cfgKey').value.trim();
   if (!url || !key) return alert('Please enter both URL and key.');
+  
   localStorage.setItem('pdif_url', url);
   localStorage.setItem('pdif_key', key);
+  
   if(initSupabase(url, key)) {
     toggleConfig();
+    alert("Connection established successfully.");
     if (currentSite) renderIdle();
   } else {
-    alert("Connection failed. Check your URL and Key.");
+    alert("Connection failed. Please check the provided URL and Key.");
   }
 }
 
@@ -277,7 +284,8 @@ function onSiteChange() {
   if (q.length >= 2) doSearch(q);
 }
 
-/** * SEARCH LOGIC 
+/**
+ * SEARCH LOGIC
  */
 function onSearch() {
   clearTimeout(searchTimer);
@@ -288,22 +296,21 @@ function onSearch() {
 
 async function doSearch(q) {
   if (!currentSite) {
-    renderState('<div class="state-idle"><div class="state-icon">⚐</div><div class="state-title">Select a pharmacy site first</div><div class="state-sub">Use the site selector in the header</div></div>');
+    renderState('<div class="state-idle"><div class="state-icon">⚐</div><div class="state-title">Select a pharmacy site first</div><div class="state-sub">Use the selector in the header</div></div>');
     return;
   }
 
   renderState('<div class="spinner"></div>');
 
   try {
-    const pyxisSystem = SITE_TO_PYXIS[currentSite] || currentSite.replace('-MAIN', '-PYXIS');
+    const qUpper = q.toUpperCase();
     
-    // We query the Master Search View we created in Supabase
-    // This view already handles the Fallback logic (IV -> LC)
+    // Search using the Master View we created in Supabase
     const { data, error } = await supabase
       .from('downtime_inventory_finder')
       .select('*')
       .eq('pharmacy', currentSite)
-      .or(`item_description.ilike.%${q}%,item.eq.${q},pyxis_id.eq.${q.toUpperCase()}`)
+      .or(`item_description.ilike.%${q}%,item.eq.${q},pyxis_id.eq.${qUpper}`)
       .limit(100);
 
     if (error) throw error;
@@ -315,11 +322,12 @@ async function doSearch(q) {
 
     renderResults(data, q);
   } catch(e) {
-    renderState(`<div class="state-idle"><div class="state-icon">⚠</div><div class="state-title">Error fetching data</div><div class="state-sub">${e.message}</div></div>`);
+    renderState(`<div class="state-idle"><div class="state-icon">⚠</div><div class="state-title">Data Retrieval Error</div><div class="state-sub">${e.message}</div></div>`);
   }
 }
 
-/** * RENDERING FUNCTIONS 
+/**
+ * RENDERING UI
  */
 function renderResults(items, q) {
   const count = items.length;
@@ -329,27 +337,29 @@ function renderResults(items, q) {
     const isInv = r.location_type === 'Inventory';
     const tagClass = isInv ? 'tag-inventory' : 'tag-forward';
     const tagLabel = isInv ? '✓ Inventory' : '⊘ Forward Pick';
-    const qtyClass = r.quantity <= 0 ? 'qty-zero' : 'qty-positive';
+    const qtyClass = (r.quantity === 0 || r.quantity === null) ? 'qty-zero' : 'qty-positive';
+    const qtyText = (r.quantity === null) ? '0' : r.quantity;
     
-    html += `<div class="result-card">
+    html += `
+    <div class="result-card">
       <div class="result-top">
         <div class="result-names">
-          <div class="result-description">${r.item_description || '—'}</div>
-          <div class="result-item-id">Item #${r.item}</div>
+          <div class="result-description">${r.item_description || 'Unknown Item'}</div>
+          <div class="result-item-id">Item ID: ${r.item}</div>
         </div>
         <span class="tag ${tagClass}">${tagLabel}</span>
       </div>
       <div class="result-grid">
         <div class="result-field">
           <div class="result-field-label">Location</div>
-          <div class="result-field-value mono">${r.location || '—'}</div>
+          <div class="result-field-value mono">${r.location || 'N/A'}</div>
         </div>
         <div class="result-field">
-          <div class="result-field-label">Quantity</div>
-          <div class="result-field-value ${qtyClass}">${r.quantity || 0} <span style="font-size:11px;font-weight:400;color:var(--text-hint)">${r.uom || ''}</span></div>
+          <div class="result-field-label">Current Quantity</div>
+          <div class="result-field-value ${qtyClass}">${qtyText} <span style="font-size:11px;font-weight:400;color:var(--text-hint)">${r.uom || ''}</span></div>
         </div>
         <div class="result-field">
-          <div class="result-field-label">Site</div>
+          <div class="result-field-label">Pharmacy</div>
           <div class="result-field-value">${r.pharmacy}</div>
         </div>
       </div>
@@ -361,24 +371,28 @@ function renderResults(items, q) {
 }
 
 function renderNoResults(q) {
-  renderState(`<div class="no-results">
-    <div class="no-results-title">No results for "${q}" at ${currentSite}</div>
-    <div class="no-results-sub">Try a different spelling, item number, or Pyxis ID.</div>
-  </div>`);
+  renderState(`
+    <div class="no-results">
+      <div class="no-results-title">No matches found for "${q}"</div>
+      <div class="no-results-sub">Try searching by internal Item ID or a different keyword.</div>
+    </div>`);
 }
 
 function renderIdle() {
-  renderState(`<div class="state-idle">
-    <div class="state-icon">⊕</div>
-    <div class="state-title">Select a site and search for a medication</div>
-    <div class="state-sub">Results show real-time location and quantity</div>
-  </div>`);
+  renderState(`
+    <div class="state-idle">
+      <div class="state-icon">⊕</div>
+      <div class="state-title">Select a site and search for a medication</div>
+      <div class="state-sub">Enter a description, ID, or Pyxis label above</div>
+    </div>`);
 }
 
 function renderState(html) {
   document.getElementById('stateArea').innerHTML = html;
 }
 
-// Start the app
 init();
 </script>
+
+</body>
+</html>
