@@ -299,6 +299,9 @@ async function doSearch(q) {
     renderState('<div class="state-idle">⚐ Select a site first</div>');
     return;
   }
+
+  console.log("CRITICAL CHECK - Site String: '" + currentSite + "' (Length: " + currentSite.length + ")");
+  
   renderState('<div class="spinner"></div>');
 
   try {
