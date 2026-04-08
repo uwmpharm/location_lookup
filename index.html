@@ -199,45 +199,33 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
+/** * CONFIGURATION & INITIALIZATION 
+ */
 let supabase = null;
 let searchTimer = null;
 let currentSite = localStorage.getItem('pdif_site') || '';
 let isConfigured = false;
 
-// Pre-configured Supabase Credentials
+// Hardcoded Credentials
 const DEFAULT_URL = 'https://iynuqsbgnshlromwkzfl.supabase.co';
 const DEFAULT_KEY = 'sb_publishable_qYy0w0btGs67ASUw8rIPug_Ken-W5AF';
-  
+
 const SITE_TO_PYXIS = {
   'UWMC-MAIN': 'UWMC-PYXIS',
   'HMC-MAIN': 'HMC-PYXIS',
   'NWH-MAIN': 'NWH-PYXIS'
 };
 
-//const ALLOWED_DOMAINS = ['uw.edu'];
-
-/*function init() {
-  const siteSelect = document.getElementById('siteSelect');
-  if (currentSite) siteSelect.value = currentSite;
-
-  const savedUrl = localStorage.getItem('pdif_url');
-  const savedKey = localStorage.getItem('pdif_key');
-  if (savedUrl && savedKey) {
-    document.getElementById('cfgUrl').value = savedUrl;
-    document.getElementById('cfgKey').value = savedKey;
-    initSupabase(savedUrl, savedKey);
-  }
-
-  const session = localStorage.getItem('pdif_session');
-  if (session) {
-    document.getElementById('authOverlay').style.display = 'none';
-  }
-}*/
-
 function init() {
+  // 1. Setup Site Selection
   const siteSelect = document.getElementById('siteSelect');
   if (currentSite) siteSelect.value = currentSite;
 
+  // 2. Automatically hide Auth Overlay (since we are using IP restriction)
+  const authOverlay = document.getElementById('authOverlay');
+  if (authOverlay) authOverlay.style.display = 'none';
+
+  // 3. Initialize Supabase with Hardcoded Credentials
   const savedUrl = localStorage.getItem('pdif_url') || DEFAULT_URL;
   const savedKey = localStorage.getItem('pdif_key') || DEFAULT_KEY;
 
@@ -252,13 +240,17 @@ function initSupabase(url, key) {
   try {
     supabase = window.supabase.createClient(url, key);
     isConfigured = true;
+    // Hide the configuration banner once connected
     document.getElementById('configBanner').style.display = 'none';
     return true;
   } catch(e) {
+    console.error("Supabase connection failed:", e);
     return false;
   }
 }
 
+/** * UI & CONFIGURATION HELPERS 
+ */
 function toggleConfig() {
   const panel = document.getElementById('configPanel');
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
@@ -270,9 +262,12 @@ function saveConfig() {
   if (!url || !key) return alert('Please enter both URL and key.');
   localStorage.setItem('pdif_url', url);
   localStorage.setItem('pdif_key', key);
-  initSupabase(url, key);
-  toggleConfig();
-  if (currentSite) renderIdle();
+  if(initSupabase(url, key)) {
+    toggleConfig();
+    if (currentSite) renderIdle();
+  } else {
+    alert("Connection failed. Check your URL and Key.");
+  }
 }
 
 function onSiteChange() {
@@ -282,51 +277,8 @@ function onSiteChange() {
   if (q.length >= 2) doSearch(q);
 }
 
-/*async function handleAuth() {
-  const email = document.getElementById('authEmail').value.trim();
-  const pass = document.getElementById('authPassword').value;
-  const btn = document.getElementById('authBtn');
-  const errDiv = document.getElementById('authError');
-
-  errDiv.style.display = 'none';
-
-  if (!email || !pass) { showAuthError('Please enter email and password.'); return; }
-
-  const domain = email.split('@')[1];
-  if (!domain || !ALLOWED_DOMAINS.some(d => domain === d || domain.endsWith('.' + d))) {
-    showAuthError('Access restricted to UW Medicine organization email addresses.');
-    return;
-  }
-
-  if (!isConfigured) {
-    localStorage.setItem('pdif_session', email);
-    document.getElementById('authOverlay').style.display = 'none';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Signing in...';
-
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
-    if (error) throw error;
-    localStorage.setItem('pdif_session', JSON.stringify(data.session));
-    document.getElementById('authOverlay').style.display = 'none';
-  } catch(e) {
-    showAuthError(e.message || 'Authentication failed.');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Sign In';
-  }
-}
-
-function showAuthError(msg) {
-  const el = document.getElementById('authError');
-  el.className = 'auth-error';
-  el.textContent = msg;
-  el.style.display = 'block';
-}*/
-
+/** * SEARCH LOGIC 
+ */
 function onSearch() {
   clearTimeout(searchTimer);
   const q = document.getElementById('searchInput').value.trim();
@@ -340,107 +292,45 @@ async function doSearch(q) {
     return;
   }
 
-  if (!isConfigured) {
-    renderDemoResults(q);
-    return;
-  }
-
   renderState('<div class="spinner"></div>');
 
   try {
     const pyxisSystem = SITE_TO_PYXIS[currentSite] || currentSite.replace('-MAIN', '-PYXIS');
-    const qUpper = q.toUpperCase();
-
-    const { data: ivData, error: ivErr } = await supabase
-      .from('wms_iv_f')
-      .select('item, item_description, actual_location, quantity, uom, pharmacy')
+    
+    // We query the Master Search View we created in Supabase
+    // This view already handles the Fallback logic (IV -> LC)
+    const { data, error } = await supabase
+      .from('downtime_inventory_finder')
+      .select('*')
       .eq('pharmacy', currentSite)
-      .or(`item_description.ilike.%${q}%,item.eq.${qUpper}`)
-      .limit(50);
+      .or(`item_description.ilike.%${q}%,item.eq.${q},pyxis_id.eq.${q.toUpperCase()}`)
+      .limit(100);
 
-    if (ivErr) throw ivErr;
+    if (error) throw error;
 
-    const invItems = ivData.map(r => ({ ...r, location_type: 'Inventory' }));
-    const invItemIds = new Set(invItems.map(r => r.item));
-
-    let fpItems = [];
-    if (invItems.length < 50) {
-      const { data: lcData, error: lcErr } = await supabase
-        .from('wms_lc_f')
-        .select('forward_pick_item, description_1, location, pharmacy, replenishment_uom')
-        .eq('pharmacy', currentSite)
-        .ilike('description_1', `%${q}%`)
-        .not('forward_pick_item', 'in', `(${[...invItemIds].join(',') || "''"})`)
-        .limit(30);
-
-      if (!lcErr && lcData) {
-        fpItems = lcData.map(r => ({
-          item: r.forward_pick_item,
-          item_description: r.description_1,
-          actual_location: r.location,
-          quantity: null,
-          uom: r.replenishment_uom,
-          pharmacy: r.pharmacy,
-          location_type: 'Forward Pick'
-        }));
-      }
-    }
-
-    const allItems = [...invItems, ...fpItems];
-
-    if (allItems.length === 0) {
+    if (!data || data.length === 0) {
       renderNoResults(q);
       return;
     }
 
-    const allItemIds = allItems.map(r => r.item).filter(Boolean);
-    let pyxisMap = {};
-    if (allItemIds.length > 0) {
-      const { data: extData } = await supabase
-        .from('dms_extsys_item_valid')
-        .select('item, external_item, external_system_name')
-        .eq('active', 1)
-        .eq('external_system_name', pyxisSystem)
-        .in('item', allItemIds);
-
-      if (extData) {
-        extData.forEach(r => {
-          if (!pyxisMap[r.item]) pyxisMap[r.item] = [];
-          pyxisMap[r.item].push(r.external_item);
-        });
-      }
-    }
-
-    renderResults(allItems, pyxisMap, q);
+    renderResults(data, q);
   } catch(e) {
     renderState(`<div class="state-idle"><div class="state-icon">⚠</div><div class="state-title">Error fetching data</div><div class="state-sub">${e.message}</div></div>`);
   }
 }
 
-function renderDemoResults(q) {
-  const demo = [
-    { item: '10000', item_description: 'penicillin G potassium 5MU vial', actual_location: 'MS10.06.A', quantity: 26, uom: 'VIAL', location_type: 'Inventory' },
-    { item: '10001', item_description: 'penicillin G potassium 20MU vial', actual_location: 'MS10.06.B', quantity: 12, uom: 'VIAL', location_type: 'Inventory' },
-    { item: '10002', item_description: 'penicillin G BENZATHINE 1.2MU/2mL syr', actual_location: 'MR4.1C.2B', quantity: 50, uom: 'SYR', location_type: 'Inventory' },
-  ].filter(r => r.item_description.toLowerCase().includes(q.toLowerCase()) || r.item === q);
-
-  if (demo.length === 0) { renderNoResults(q); return; }
-  renderResults(demo, {}, q, true);
-}
-
-function renderResults(items, pyxisMap, q, isDemo = false) {
+/** * RENDERING FUNCTIONS 
+ */
+function renderResults(items, q) {
   const count = items.length;
   let html = `<div class="results-header"><div class="results-count"><strong>${count}</strong> result${count !== 1 ? 's' : ''} for "${q}" at ${currentSite}</div></div>`;
-  if (isDemo) html = `<div class="config-banner" style="margin-bottom:14px"><strong>Demo mode.</strong> Connect to Supabase to search live data.</div>` + html;
 
   items.forEach(r => {
     const isInv = r.location_type === 'Inventory';
     const tagClass = isInv ? 'tag-inventory' : 'tag-forward';
     const tagLabel = isInv ? '✓ Inventory' : '⊘ Forward Pick';
-    const qtyClass = r.quantity === 0 ? 'qty-zero' : (r.quantity > 0 ? 'qty-positive' : '');
-    const qtyVal = r.quantity === null ? '—' : r.quantity;
-    const pyxisIds = pyxisMap[r.item] || [];
-
+    const qtyClass = r.quantity <= 0 ? 'qty-zero' : 'qty-positive';
+    
     html += `<div class="result-card">
       <div class="result-top">
         <div class="result-names">
@@ -452,18 +342,18 @@ function renderResults(items, pyxisMap, q, isDemo = false) {
       <div class="result-grid">
         <div class="result-field">
           <div class="result-field-label">Location</div>
-          <div class="result-field-value mono">${r.actual_location || '—'}</div>
+          <div class="result-field-value mono">${r.location || '—'}</div>
         </div>
         <div class="result-field">
           <div class="result-field-label">Quantity</div>
-          <div class="result-field-value ${qtyClass}">${qtyVal}${r.uom ? ' <span style="font-size:11px;font-weight:400;color:var(--text-hint)">' + r.uom + '</span>' : ''}</div>
+          <div class="result-field-value ${qtyClass}">${r.quantity || 0} <span style="font-size:11px;font-weight:400;color:var(--text-hint)">${r.uom || ''}</span></div>
         </div>
         <div class="result-field">
           <div class="result-field-label">Site</div>
-          <div class="result-field-value">${r.pharmacy || currentSite}</div>
+          <div class="result-field-value">${r.pharmacy}</div>
         </div>
       </div>
-      ${pyxisIds.length > 0 ? `<div class="pyxis-row"><span class="pyxis-label">Pyxis IDs:</span>${pyxisIds.map(id => `<span class="pyxis-pill">${id}</span>`).join('')}</div>` : ''}
+      ${r.pyxis_id ? `<div class="pyxis-row"><span class="pyxis-label">Pyxis ID:</span><span class="pyxis-pill">${r.pyxis_id}</span></div>` : ''}
     </div>`;
   });
 
@@ -473,7 +363,7 @@ function renderResults(items, pyxisMap, q, isDemo = false) {
 function renderNoResults(q) {
   renderState(`<div class="no-results">
     <div class="no-results-title">No results for "${q}" at ${currentSite}</div>
-    <div class="no-results-sub">Try a different spelling, item number, or Pyxis ID. Check that the correct site is selected.</div>
+    <div class="no-results-sub">Try a different spelling, item number, or Pyxis ID.</div>
   </div>`);
 }
 
@@ -481,7 +371,7 @@ function renderIdle() {
   renderState(`<div class="state-idle">
     <div class="state-icon">⊕</div>
     <div class="state-title">Select a site and search for a medication</div>
-    <div class="state-sub">Results will show location, quantity, and Pyxis ID</div>
+    <div class="state-sub">Results show real-time location and quantity</div>
   </div>`);
 }
 
@@ -489,5 +379,6 @@ function renderState(html) {
   document.getElementById('stateArea').innerHTML = html;
 }
 
+// Start the app
 init();
 </script>
