@@ -5,14 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pharmacy Downtime Inventory Finder | UW Medicine</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&family=Source+Serif+4:wght@400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&display=swap');
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --uw-purple: #32006e;
       --uw-purple-mid: #54348b;
+      --uw-purple-light: #7b5ea7;
       --uw-gold: #FFC700;
+      --uw-gold-dark: #e0aa00;
       --bg: #f5f3f8;
       --surface: #ffffff;
       --border: rgba(50,0,110,0.12);
@@ -25,242 +27,687 @@
       --radius: 10px;
     }
 
-    body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text-primary); }
+    html, body { height: 100%; }
+    body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text-primary); display: flex; flex-direction: column; min-height: 100vh; }
 
-    .header { 
-      background: var(--uw-purple); 
-      color: white; 
-      padding: 0 24px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
-      height: 60px; 
-      border-bottom: 3px solid var(--uw-gold); 
+    /* ── HEADER ── */
+    .header {
+      background: var(--uw-purple);
+      color: white;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      height: 56px;
+      border-bottom: 3px solid var(--uw-gold);
+      flex-shrink: 0;
     }
-    
     .header-logo { font-family: 'Source Serif 4', serif; font-size: 18px; font-weight: 600; color: white; }
     .header-logo span { color: var(--uw-gold); }
 
-    .site-controls { display: flex; align-items: center; gap: 12px; }
-    .site-select { 
-      background: white; 
-      border: 2px solid var(--uw-gold); 
-      color: var(--uw-purple); 
-      font-size: 14px; 
-      font-weight: 700; 
-      padding: 6px 12px; 
-      border-radius: 6px; 
+    /* ── GATE SCREEN (shown before site is selected) ── */
+    #gateScreen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      background: linear-gradient(160deg, #32006e 0%, #54348b 60%, #7b5ea7 100%);
+    }
+    #gateScreen.hidden { display: none; }
+
+    .gate-badge {
+      background: rgba(255,199,0,0.15);
+      border: 1px solid rgba(255,199,0,0.4);
+      color: var(--uw-gold);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .gate-title {
+      font-family: 'Source Serif 4', serif;
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 600;
+      color: white;
+      text-align: center;
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+
+    .gate-subtitle {
+      font-size: 15px;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .gate-card {
+      background: white;
+      border-radius: 16px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .gate-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    .gate-select-wrap { position: relative; margin-bottom: 20px; }
+    .gate-select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--uw-purple);
+      font-size: 16px;
+      pointer-events: none;
+    }
+
+    .gate-select {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      color: var(--text-primary);
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 14px 40px 14px 16px;
+      border-radius: var(--radius);
       cursor: pointer;
       outline: none;
+      transition: border-color 0.2s;
+    }
+    .gate-select:focus { border-color: var(--uw-purple); }
+
+    .gate-btn {
+      width: 100%;
+      background: var(--uw-purple);
+      color: white;
+      border: none;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 15px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.3px;
+    }
+    .gate-btn:hover:not(:disabled) { background: var(--uw-purple-mid); }
+    .gate-btn:active:not(:disabled) { transform: scale(0.99); }
+    .gate-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .gate-error {
+      font-size: 13px;
+      color: var(--red);
+      margin-top: 10px;
+      text-align: center;
+      min-height: 18px;
     }
 
-    .search-zone { background: var(--uw-purple); padding: 35px 24px; }
-    .search-wrap { position: relative; max-width: 600px; margin: 0 auto; }
-    .search-input { 
-      width: 100%; 
-      height: 54px; 
-      padding: 0 20px; 
-      border: 3px solid rgba(255,255,255,0.2); 
-      border-radius: var(--radius); 
-      background: rgba(255,255,255,0.05); 
-      color: white; 
-      font-size: 18px; 
-      outline: none; 
-      transition: all 0.25s ease;
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-    
-    /* Active State for Search Input */
-    .search-input.enabled {
-      opacity: 1;
-      cursor: text;
-      background: rgba(255,255,255,0.15);
-      border-color: var(--uw-gold);
+    /* ── MAIN APP (shown after site selected) ── */
+    #appScreen { flex: 1; display: flex; flex-direction: column; }
+    #appScreen.hidden { display: none; }
+
+    .search-zone { background: var(--uw-purple); padding: 24px; }
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 750px;
+      margin: 0 auto;
     }
 
+    .site-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,199,0,0.5);
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: white;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .site-chip-label { font-size: 10px; font-weight: 800; letter-spacing: 1px; color: var(--uw-gold); text-transform: uppercase; }
+    .site-chip-name { font-size: 14px; font-weight: 700; }
+    .change-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      padding: 2px 4px;
+      margin-left: 4px;
+      transition: color 0.2s;
+    }
+    .change-btn:hover { color: var(--uw-gold); }
+
+    .search-input-wrap { position: relative; flex: 1; }
+    .search-input {
+      width: 100%;
+      height: 50px;
+      padding: 0 48px 0 18px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.12);
+      color: white;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .search-input::placeholder { color: rgba(255,255,255,0.45); }
+    .search-input:focus { border-color: var(--uw-gold); background: rgba(255,255,255,0.18); }
+    .search-clear {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+      display: none;
+    }
+    .search-clear.visible { display: block; }
+    .search-clear:hover { color: white; }
+
+    /* ── RESULTS AREA ── */
     .main { flex: 1; padding: 24px; max-width: 850px; width: 100%; margin: 0 auto; }
 
-    .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
-    .result-top { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start; }
-    .result-description { font-size: 17px; font-weight: 600; color: var(--uw-purple); line-height: 1.2; }
-    .tag { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .result-count { margin-bottom: 16px; font-size: 13px; color: var(--text-secondary); }
+    .result-count strong { color: var(--text-primary); }
+
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s;
+    }
+    .result-card:hover { box-shadow: 0 4px 12px rgba(50,0,110,0.1); }
+
+    .result-top { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start; gap: 12px; }
+    .result-description { font-size: 17px; font-weight: 600; color: var(--uw-purple); line-height: 1.25; }
+    .tag { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; flex-shrink: 0; }
     .tag-inventory { background: var(--green-bg); color: var(--green); }
     .tag-forward { background: #fff7e0; color: #7a5200; }
-    
-    .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+    .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .field { background: var(--bg); padding: 10px; border-radius: 8px; }
     .label { font-size: 11px; color: var(--text-hint); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
-    .value { font-size: 15px; font-weight: 600; font-family: 'Source Sans 3', sans-serif; }
+    .value { font-size: 15px; font-weight: 600; }
     .mono { font-family: monospace; font-size: 14px; }
 
     .pyxis-row { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
     .pyxis-pill { background: var(--uw-purple); color: white; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; font-family: monospace; }
 
-    .state-msg { text-align: center; padding: 50px 20px; color: var(--text-secondary); }
+    .state-msg { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .state-msg h3 { font-size: 18px; margin-bottom: 8px; color: var(--text-primary); }
+    .state-msg p { font-size: 15px; line-height: 1.5; }
     .spinner { width: 34px; height: 34px; border: 4px solid #e0e0e0; border-top: 4px solid var(--uw-purple); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── DEBUG PANEL ── */
+    #debugPanel {
+      background: #1a0a2e;
+      color: #a0e0b0;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 16px 20px;
+      max-width: 850px;
+      width: 100%;
+      margin: 0 auto 0;
+      border-radius: 10px 10px 0 0;
+      display: none;
+    }
+    #debugPanel.visible { display: block; }
+    #debugPanel h4 { color: var(--uw-gold); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+    #debugLog { white-space: pre-wrap; line-height: 1.6; max-height: 180px; overflow-y: auto; }
+    .debug-err { color: #ff7b7b; }
+    .debug-ok { color: #7bffb0; }
+    .debug-info { color: #7bcfff; }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: var(--uw-purple);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .footer-left { font-size: 12px; color: rgba(255,255,255,0.45); }
+    .version-badge {
+      font-family: monospace;
+      font-size: 11px;
+      background: rgba(255,199,0,0.15);
+      border: 1px solid rgba(255,199,0,0.3);
+      color: var(--uw-gold);
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+    .debug-toggle {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.4);
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-left: 10px;
+      font-family: monospace;
+    }
+    .debug-toggle:hover { color: white; border-color: rgba(255,255,255,0.4); }
+
+    @media (max-width: 560px) {
+      .result-grid { grid-template-columns: 1fr 1fr; }
+      .search-bar { flex-direction: column; align-items: stretch; }
+      .site-chip { justify-content: space-between; }
+    }
   </style>
 </head>
 <body>
 
-<div class="app">
-  <div class="header">
-    <div class="header-logo">UW <span>Medicine</span></div>
-    <div class="site-controls">
-      <span style="font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.8)">SITE:</span>
-      <select class="site-select" id="siteSelect">
-        <option value="">— SELECT SITE —</option>
-        <option value="HMC-MAIN">Harborview</option>
-        <option value="UWMC-MAIN">Montlake</option>
-        <option value="NWH-MAIN">Northwest</option>
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">UW <span>Medicine</span></div>
+</div>
+
+<!-- GATE SCREEN -->
+<div id="gateScreen">
+  <div class="gate-badge">Downtime Tool</div>
+  <div class="gate-title">Pharmacy Inventory Finder</div>
+  <div class="gate-subtitle">Select your hospital site to begin searching</div>
+  <div class="gate-card">
+    <div class="gate-label">Hospital Site</div>
+    <div class="gate-select-wrap">
+      <select class="gate-select" id="gateSiteSelect">
+        <option value="">— Choose a location —</option>
+        <option value="HMC-MAIN">Harborview Medical Center</option>
+        <option value="UWMC-MAIN">UW Medical Center – Montlake</option>
+        <option value="NWH-MAIN">UW Medical Center – Northwest</option>
       </select>
     </div>
+    <button class="gate-btn" id="gateBtn" disabled>Continue to Inventory Search →</button>
+    <div class="gate-error" id="gateError"></div>
   </div>
+</div>
 
+<!-- MAIN APP SCREEN -->
+<div id="appScreen" class="hidden">
   <div class="search-zone">
-    <div class="search-wrap">
-      <input class="search-input" id="searchInput" type="text" placeholder="Select a location first..." disabled autocomplete="off" />
+    <div class="search-bar">
+      <div class="site-chip">
+        <div>
+          <div class="site-chip-label">Site</div>
+          <div class="site-chip-name" id="siteChipName">—</div>
+        </div>
+        <button class="change-btn" id="changeSiteBtn">change</button>
+      </div>
+      <div class="search-input-wrap">
+        <input class="search-input" id="searchInput" type="text" placeholder="Search by medication name, Item ID, or Pyxis ID…" autocomplete="off" />
+        <button class="search-clear" id="searchClear">✕</button>
+      </div>
     </div>
   </div>
 
   <div class="main" id="stateArea">
+    <div class="state-msg"><h3>Ready to Search</h3><p>Enter a medication name, Item ID, or Pyxis ID above.</p></div>
+  </div>
+
+  <div style="max-width:850px; width:100%; margin: 0 auto; padding: 0 24px;">
+    <div id="debugPanel">
+      <h4>🔍 Debug Log</h4>
+      <div id="debugLog"></div>
     </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span class="footer-left">UW Medicine Pharmacy Services</span>
+  <div style="display:flex; align-items:center; gap:6px;">
+    <button class="debug-toggle" id="debugToggleBtn" title="Toggle debug log">debug</button>
+    <span class="version-badge" id="versionBadge">v1.2.0</span>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-/** * CONNECTIVITY 
- */
+/* ─────────────────────────────────────────────
+   VERSION & CONFIG
+   ─────────────────────────────────────────────
+   Bump APP_VERSION when deploying changes.
+   BUILD_DATE is set automatically at page load.
+*/
+const APP_VERSION  = '1.2.0';
+const BUILD_DATE   = '2026-04-08';
+
+/* ─────────────────────────────────────────────
+   SUPABASE CONNECTIVITY
+   NOTE: The key below uses the "sb_publishable_"
+   prefix format. Standard Supabase anon keys are
+   JWTs beginning with "eyJ". If searches return
+   no results or 401 errors, replace DEFAULT_KEY
+   with the JWT anon key from your Supabase project
+   dashboard under Settings → API.
+   ─────────────────────────────────────────────*/
 const DEFAULT_URL = 'https://iynuqsbgnshlromwkzfl.supabase.co';
 const DEFAULT_KEY = 'sb_publishable_qYy0w0btGs67ASUw8rIPug_Ken-W5AF';
-const supabase = window.supabase.createClient(DEFAULT_URL, DEFAULT_KEY);
 
-let currentSite = localStorage.getItem('pdif_site') || '';
-let searchTimer = null;
+let supabase;
+try {
+  supabase = window.supabase.createClient(DEFAULT_URL, DEFAULT_KEY);
+} catch(e) {
+  debugLog('Supabase init failed: ' + e.message, 'err');
+}
 
-/** * ELEMENT SELECTORS 
- */
-const siteSelect = document.getElementById('siteSelect');
-const searchInput = document.getElementById('searchInput');
-const stateArea = document.getElementById('stateArea');
+/* ─────────────────────────────────────────────
+   STATE
+   ─────────────────────────────────────────────*/
+const SITE_LABELS = {
+  'HMC-MAIN':  'Harborview',
+  'UWMC-MAIN': 'Montlake',
+  'NWH-MAIN':  'Northwest',
+};
 
-/** * EVENT LISTENERS 
- */
-siteSelect.addEventListener('change', (e) => {
-  currentSite = e.target.value;
+let currentSite   = '';
+let searchTimer   = null;
+let debugVisible  = false;
+
+/* ─────────────────────────────────────────────
+   ELEMENTS
+   ─────────────────────────────────────────────*/
+const gateScreen     = document.getElementById('gateScreen');
+const appScreen      = document.getElementById('appScreen');
+const gateSiteSelect = document.getElementById('gateSiteSelect');
+const gateBtn        = document.getElementById('gateBtn');
+const gateError      = document.getElementById('gateError');
+const siteChipName   = document.getElementById('siteChipName');
+const changeSiteBtn  = document.getElementById('changeSiteBtn');
+const searchInput    = document.getElementById('searchInput');
+const searchClear    = document.getElementById('searchClear');
+const stateArea      = document.getElementById('stateArea');
+const debugPanel     = document.getElementById('debugPanel');
+const debugLogEl     = document.getElementById('debugLog');
+const debugToggleBtn = document.getElementById('debugToggleBtn');
+const versionBadge   = document.getElementById('versionBadge');
+
+/* ─────────────────────────────────────────────
+   INIT
+   ─────────────────────────────────────────────*/
+function init() {
+  versionBadge.textContent = `v${APP_VERSION} · ${BUILD_DATE}`;
+  debugLog(`App initialized — version ${APP_VERSION}`, 'info');
+  debugLog(`Supabase URL: ${DEFAULT_URL}`, 'info');
+  debugLog(`Key prefix: ${DEFAULT_KEY.substring(0,20)}…`, 'info');
+
+  const saved = localStorage.getItem('pdif_site');
+  if (saved && SITE_LABELS[saved]) {
+    currentSite = saved;
+    showApp();
+  } else {
+    showGate();
+  }
+}
+
+/* ─────────────────────────────────────────────
+   GATE → APP FLOW
+   ─────────────────────────────────────────────*/
+function showGate() {
+  gateScreen.classList.remove('hidden');
+  appScreen.classList.add('hidden');
+  gateError.textContent = '';
+}
+
+function showApp() {
+  gateScreen.classList.add('hidden');
+  appScreen.classList.remove('hidden');
+  siteChipName.textContent = SITE_LABELS[currentSite] || currentSite;
+  searchInput.value = '';
+  searchClear.classList.remove('visible');
+  renderIdle();
+  setTimeout(() => searchInput.focus(), 100);
+  debugLog(`Site selected: ${currentSite}`, 'ok');
+}
+
+/* ─────────────────────────────────────────────
+   EVENT LISTENERS — GATE
+   ─────────────────────────────────────────────*/
+gateSiteSelect.addEventListener('change', () => {
+  gateBtn.disabled = !gateSiteSelect.value;
+  gateError.textContent = '';
+});
+
+gateBtn.addEventListener('click', () => {
+  const val = gateSiteSelect.value;
+  if (!val) { gateError.textContent = 'Please select a site.'; return; }
+  currentSite = val;
   localStorage.setItem('pdif_site', currentSite);
-  updateInputState();
+  showApp();
+});
+
+/* ─────────────────────────────────────────────
+   EVENT LISTENERS — SEARCH
+   ─────────────────────────────────────────────*/
+changeSiteBtn.addEventListener('click', () => {
+  currentSite = '';
+  localStorage.removeItem('pdif_site');
+  showGate();
 });
 
 searchInput.addEventListener('input', () => {
-  clearTimeout(searchTimer);
   const q = searchInput.value.trim();
+  searchClear.classList.toggle('visible', q.length > 0);
+  clearTimeout(searchTimer);
   if (q.length < 2) { renderIdle(); return; }
-  searchTimer = setTimeout(() => doSearch(q), 200);
+  searchTimer = setTimeout(() => doSearch(q), 250);
 });
 
-/** * LOGIC 
- */
-function init() {
-  if (currentSite) {
-    siteSelect.value = currentSite;
-  }
-  updateInputState();
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  searchClear.classList.remove('visible');
+  renderIdle();
+  searchInput.focus();
+});
+
+/* ─────────────────────────────────────────────
+   DEBUG PANEL
+   ─────────────────────────────────────────────*/
+debugToggleBtn.addEventListener('click', () => {
+  debugVisible = !debugVisible;
+  debugPanel.classList.toggle('visible', debugVisible);
+  debugToggleBtn.style.color = debugVisible ? 'var(--uw-gold)' : '';
+  debugToggleBtn.style.borderColor = debugVisible ? 'rgba(255,199,0,0.4)' : '';
+});
+
+function debugLog(msg, type = 'info') {
+  const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
+  const cls = type === 'err' ? 'debug-err' : type === 'ok' ? 'debug-ok' : 'debug-info';
+  const line = document.createElement('div');
+  line.className = cls;
+  line.textContent = `[${ts}] ${msg}`;
+  debugLogEl.appendChild(line);
+  debugLogEl.scrollTop = debugLogEl.scrollHeight;
+  console.log(`[PDIF ${ts}] ${msg}`);
 }
 
-function updateInputState() {
-  if (currentSite && currentSite !== "") {
-    searchInput.disabled = false;
-    searchInput.classList.add('enabled');
-    searchInput.placeholder = "Search inventory at " + siteSelect.options[siteSelect.selectedIndex].text + "...";
-    renderIdle();
-  } else {
-    searchInput.disabled = true;
-    searchInput.classList.remove('enabled');
-    searchInput.placeholder = "Select a location first...";
-    searchInput.value = "";
-    renderWelcome();
-  }
-}
-
+/* ─────────────────────────────────────────────
+   SEARCH
+   ─────────────────────────────────────────────*/
 async function doSearch(q) {
-  console.log("SEARCHING - Site:", currentSite, "Query:", q);
-  renderState('<div class="spinner"></div>');
+  debugLog(`Searching "${q}" at ${currentSite}…`, 'info');
+  renderState('<div class="state-msg"><div class="spinner"></div><p>Searching inventory…</p></div>');
+
+  if (!supabase) {
+    renderState(`<div class="state-msg"><h3 style="color:var(--red)">Supabase Not Initialized</h3><p>Check the API key and reload.</p></div>`);
+    debugLog('supabase client is null — aborting search', 'err');
+    return;
+  }
 
   try {
-    const { data, error } = await supabase
+    /*
+      QUERY STRATEGY:
+      We run two separate queries and merge the results to avoid the
+      edge-case where .or() with mixed operators (.eq vs .ilike) can
+      silently drop results in some Supabase/PostgREST versions.
+      
+      Query A: fuzzy description match (ilike)
+      Query B: exact item ID or exact pyxis_id match
+    */
+    debugLog(`Query A: item_description ilike %${q}%`, 'info');
+    const queryA = supabase
       .from('downtime_inventory_finder')
       .select('*')
       .eq('pharmacy', currentSite)
-      .or(`item_description.ilike.%${q}%,item.eq.${q},pyxis_id.eq.${q.toUpperCase()}`)
+      .ilike('item_description', `%${q}%`)
       .limit(50);
 
-    if (error) throw error;
+    debugLog(`Query B: item = "${q}" OR pyxis_id = "${q.toUpperCase()}"`, 'info');
+    const queryB = supabase
+      .from('downtime_inventory_finder')
+      .select('*')
+      .eq('pharmacy', currentSite)
+      .or(`item.eq.${q},pyxis_id.eq.${q.toUpperCase()}`)
+      .limit(10);
 
-    if (!data || data.length === 0) {
-      renderState(`<div class="state-msg"><h3>No Results</h3><p>No matches for "${q}" at this site.</p></div>`);
+    const [resA, resB] = await Promise.all([queryA, queryB]);
+
+    // Log raw results for debugging
+    debugLog(`Query A → ${resA.error ? 'ERROR: ' + resA.error.message : resA.data?.length + ' rows'}`, resA.error ? 'err' : 'ok');
+    debugLog(`Query B → ${resB.error ? 'ERROR: ' + resB.error.message : resB.data?.length + ' rows'}`, resB.error ? 'err' : 'ok');
+
+    if (resA.error) throw resA.error;
+    if (resB.error) {
+      // B may fail if item/pyxis_id columns don't exist — log but don't crash
+      debugLog('Query B failed (non-fatal): ' + resB.error.message, 'err');
+    }
+
+    // Merge & deduplicate by primary key (id field, fall back to array index)
+    const seen = new Set();
+    const combined = [];
+    for (const row of [...(resA.data || []), ...(resB.data || [])]) {
+      const key = row.id ?? JSON.stringify(row);
+      if (!seen.has(key)) { seen.add(key); combined.push(row); }
+    }
+
+    debugLog(`Merged total: ${combined.length} unique rows`, combined.length > 0 ? 'ok' : 'info');
+
+    if (combined.length === 0) {
+      // Extra diagnostic: check if ANY rows exist for this site
+      const { count, error: cErr } = await supabase
+        .from('downtime_inventory_finder')
+        .select('*', { count: 'exact', head: true })
+        .eq('pharmacy', currentSite);
+
+      if (cErr) {
+        debugLog('Count check error: ' + cErr.message, 'err');
+      } else {
+        debugLog(`Site "${currentSite}" has ${count ?? 'unknown'} total rows in table`, count > 0 ? 'ok' : 'err');
+        if (count === 0) {
+          debugLog('⚠ Possible cause: "pharmacy" column value may not match "' + currentSite + '". Check exact values in DB.', 'err');
+        }
+      }
+      renderState(`<div class="state-msg"><h3>No Results</h3><p>No matches for "<strong>${escHtml(q)}</strong>" at this site.<br><small style="color:var(--text-hint)">Try a partial name, Item ID, or Pyxis ID.</small></p></div>`);
       return;
     }
-    renderResults(data, q);
+
+    renderResults(combined, q);
   } catch (e) {
-    renderState(`<div class="state-msg"><h3 style="color:var(--red)">Connection Error</h3><p>${e.message}</p></div>`);
+    debugLog('Search error: ' + e.message, 'err');
+    // Surface a hint if the key looks non-standard
+    const keyHint = DEFAULT_KEY.startsWith('sb_publishable_')
+      ? '<br><small>The API key format looks non-standard. Check Settings → API in your Supabase project for the correct anon/public key (starts with "eyJ").</small>'
+      : '';
+    renderState(`<div class="state-msg"><h3 style="color:var(--red)">Connection Error</h3><p>${escHtml(e.message)}${keyHint}</p></div>`);
   }
 }
 
-/** * UI RENDERING 
- */
+/* ─────────────────────────────────────────────
+   RENDERING
+   ─────────────────────────────────────────────*/
 function renderResults(items, q) {
-  let html = `<div style="margin-bottom:15px; font-size:13px; color:var(--text-secondary)">Found ${items.length} items for "<strong>${q}</strong>"</div>`;
+  let html = `<div class="result-count">Found <strong>${items.length}</strong> result${items.length !== 1 ? 's' : ''} for "<strong>${escHtml(q)}</strong>"</div>`;
 
   items.forEach(r => {
-    // Defensive check to prevent "undefined" errors
     if (!r) return;
-
-    const isInv = r.location_type === 'Inventory';
+    const isInv    = r.location_type === 'Inventory';
     const tagClass = isInv ? 'tag-inventory' : 'tag-forward';
     const tagLabel = isInv ? '✓ In Stock' : '⊘ Fallback Location';
-    
-    // Formatting quantity
-    const rawQty = r.quantity === null ? 0 : r.quantity;
-    const qtyClass = parseFloat(rawQty) <= 0 ? 'color:var(--red)' : 'color:var(--green)';
+    const rawQty   = r.quantity === null || r.quantity === undefined ? 0 : r.quantity;
+    const qtyStyle = parseFloat(rawQty) <= 0 ? 'color:var(--red)' : 'color:var(--green)';
 
     html += `
     <div class="result-card">
       <div class="result-top">
-        <div class="result-description">${r.item_description || 'Unknown medication'}</div>
+        <div class="result-description">${escHtml(r.item_description || 'Unknown medication')}</div>
         <span class="tag ${tagClass}">${tagLabel}</span>
       </div>
       <div class="result-grid">
         <div class="field">
           <div class="label">Location</div>
-          <div class="value mono">${r.location || '—'}</div>
+          <div class="value mono">${escHtml(r.location || '—')}</div>
         </div>
         <div class="field">
           <div class="label">Quantity</div>
-          <div class="value" style="${qtyClass}">${rawQty} <small style="color:var(--text-hint)">${r.uom || ''}</small></div>
+          <div class="value" style="${qtyStyle}">${escHtml(String(rawQty))} <small style="color:var(--text-hint)">${escHtml(r.uom || '')}</small></div>
         </div>
         <div class="field">
           <div class="label">Internal ID</div>
-          <div class="value mono">${r.item || 'N/A'}</div>
+          <div class="value mono">${escHtml(r.item || 'N/A')}</div>
         </div>
       </div>
-      ${r.pyxis_id ? `<div class="pyxis-row"><span class="label" style="margin-right:5px">Pyxis ID:</span><span class="pyxis-pill">${r.pyxis_id}</span></div>` : ''}
+      ${r.pyxis_id ? `<div class="pyxis-row"><span class="label" style="margin-right:5px">Pyxis ID:</span><span class="pyxis-pill">${escHtml(r.pyxis_id)}</span></div>` : ''}
     </div>`;
   });
   renderState(html);
 }
 
-function renderWelcome() {
-  renderState('<div class="state-msg"><h3>Welcome</h3><p>Select your hospital site in the top right to start searching.</p></div>');
-}
-
 function renderIdle() {
-  renderState('<div class="state-msg"><h3>Ready</h3><p>Enter a medication name, Item ID, or Pyxis ID.</p></div>');
+  renderState('<div class="state-msg"><h3>Ready to Search</h3><p>Enter a medication name, Item ID, or Pyxis ID.</p></div>');
 }
 
 function renderState(html) { stateArea.innerHTML = html; }
 
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ─────────────────────────────────────────────
+   BOOT
+   ─────────────────────────────────────────────*/
 init();
 </script>
 </body>
