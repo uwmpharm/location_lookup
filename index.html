@@ -305,54 +305,65 @@ async function doSearch(q) {
   try {
     const qUpper = q.toUpperCase();
     
-    // Search using the Master View we created in Supabase
-    const { data, error } = await supabase
+    // Execute the query
+    const response = await supabase
       .from('downtime_inventory_finder')
       .select('*')
       .eq('pharmacy', currentSite)
       .or(`item_description.ilike.%${q}%,item.eq.${q},pyxis_id.eq.${qUpper}`)
       .limit(100);
 
-    if (error) throw error;
+    // DEBUG: Check what actually came back in your console
+    console.log("Supabase Response:", response);
 
-    if (!data || data.length === 0) {
+    if (response.error) throw response.error;
+
+    // Ensure we are looking at the data array itself
+    const items = response.data || [];
+
+    if (items.length === 0) {
       renderNoResults(q);
       return;
     }
 
-    renderResults(data, q);
+    renderResults(items, q);
   } catch(e) {
+    console.error("Search Error:", e);
     renderState(`<div class="state-idle"><div class="state-icon">⚠</div><div class="state-title">Data Retrieval Error</div><div class="state-sub">${e.message}</div></div>`);
   }
 }
 
-/**
- * RENDERING UI
- */
 function renderResults(items, q) {
+  if (!Array.isArray(items)) return; // Protection against malformed data
+
   const count = items.length;
   let html = `<div class="results-header"><div class="results-count"><strong>${count}</strong> result${count !== 1 ? 's' : ''} for "${q}" at ${currentSite}</div></div>`;
 
   items.forEach(r => {
+    // If a record is somehow empty, skip it
+    if (!r) return;
+
     const isInv = r.location_type === 'Inventory';
     const tagClass = isInv ? 'tag-inventory' : 'tag-forward';
     const tagLabel = isInv ? '✓ Inventory' : '⊘ Forward Pick';
-    const qtyClass = (r.quantity === 0 || r.quantity === null) ? 'qty-zero' : 'qty-positive';
-    const qtyText = (r.quantity === null) ? '0' : r.quantity;
+    
+    // Handle cases where quantity might be missing or null
+    const qtyText = (r.quantity === null || r.quantity === undefined) ? '0' : r.quantity;
+    const qtyClass = parseFloat(qtyText) <= 0 ? 'qty-zero' : 'qty-positive';
     
     html += `
     <div class="result-card">
       <div class="result-top">
         <div class="result-names">
           <div class="result-description">${r.item_description || 'Unknown Item'}</div>
-          <div class="result-item-id">Item ID: ${r.item}</div>
+          <div class="result-item-id">Item ID: ${r.item || 'N/A'}</div>
         </div>
         <span class="tag ${tagClass}">${tagLabel}</span>
       </div>
       <div class="result-grid">
         <div class="result-field">
           <div class="result-field-label">Location</div>
-          <div class="result-field-value mono">${r.location || 'N/A'}</div>
+          <div class="result-field-value mono">${r.location || '—'}</div>
         </div>
         <div class="result-field">
           <div class="result-field-label">Current Quantity</div>
@@ -360,7 +371,7 @@ function renderResults(items, q) {
         </div>
         <div class="result-field">
           <div class="result-field-label">Pharmacy</div>
-          <div class="result-field-value">${r.pharmacy}</div>
+          <div class="result-field-value">${r.pharmacy || currentSite}</div>
         </div>
       </div>
       ${r.pyxis_id ? `<div class="pyxis-row"><span class="pyxis-label">Pyxis ID:</span><span class="pyxis-pill">${r.pyxis_id}</span></div>` : ''}
