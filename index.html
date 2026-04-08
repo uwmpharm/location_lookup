@@ -296,40 +296,44 @@ function onSearch() {
 
 async function doSearch(q) {
   if (!currentSite) {
-    renderState('<div class="state-idle"><div class="state-icon">⚐</div><div class="state-title">Select a pharmacy site first</div><div class="state-sub">Use the selector in the header</div></div>');
+    renderState('<div class="state-idle">⚐ Select a site first</div>');
     return;
   }
-
   renderState('<div class="spinner"></div>');
 
   try {
-    const qUpper = q.toUpperCase();
-    
-    // Execute the query
-    const response = await supabase
+    console.log("--- Diagnostic Search Starting ---");
+    console.log("Searching for:", q, "at Site:", currentSite);
+
+    // TEST 1: Can the app see ANY rows in the view at all?
+    const testAny = await supabase.from('downtime_inventory_finder').select('pharmacy').limit(1);
+    console.log("Test 1 (Connection/Permission Check):", testAny.data ? "SUCCESS - Data visible" : "FAILED - No data visible");
+    if (testAny.error) console.error("Test 1 Error:", testAny.error);
+
+    // TEST 2: Does the site filter work?
+    const testSite = await supabase.from('downtime_inventory_finder').select('pharmacy').eq('pharmacy', currentSite).limit(1);
+    console.log("Test 2 (Site Filter Check):", testSite.data && testSite.data.length > 0 ? "SUCCESS - Site found" : "FAILED - Site not found");
+
+    // FINAL SEARCH
+    const { data, error } = await supabase
       .from('downtime_inventory_finder')
       .select('*')
       .eq('pharmacy', currentSite)
-      .or(`item_description.ilike.%${q}%,item.eq.${q},pyxis_id.eq.${qUpper}`)
+      .or(`item_description.ilike.%${q}%,item.eq.${q},pyxis_id.eq.${q.toUpperCase()}`)
       .limit(100);
 
-    // DEBUG: Check what actually came back in your console
-    console.log("Supabase Response:", response);
+    if (error) throw error;
 
-    if (response.error) throw response.error;
-
-    // Ensure we are looking at the data array itself
-    const items = response.data || [];
-
-    if (items.length === 0) {
+    if (!data || data.length === 0) {
+      console.log("Search returned 0 results for the specific query.");
       renderNoResults(q);
       return;
     }
 
-    renderResults(items, q);
+    renderResults(data, q);
   } catch(e) {
-    console.error("Search Error:", e);
-    renderState(`<div class="state-idle"><div class="state-icon">⚠</div><div class="state-title">Data Retrieval Error</div><div class="state-sub">${e.message}</div></div>`);
+    console.error("Diagnostic Error:", e);
+    renderState(`<div class="state-idle">⚠ Error: ${e.message}</div>`);
   }
 }
 
