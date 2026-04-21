@@ -400,40 +400,83 @@ main {
   color: var(--uw-gray-mid);
 }
 
-.result-card-body {
-  padding: 16px 20px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 14px 24px;
+/* ── CARD HEADER — item info + Pyxis side by side ── */
+.result-card-header {
+  justify-content: space-between;
+  align-items: flex-start;
 }
-.result-field label {
-  display: block;
-  font-size: 0.6875rem; /* 11px — uppercase eyebrow label */
+.result-item-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+.result-item-num,
+.result-item-pkg {
+  font-size: 0.875rem; /* 14px */
+  color: var(--uw-gray-mid);
+}
+.result-item-pkg { color: var(--uw-gray-light); }
+
+.result-pyxis-block {
+  text-align: right;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+.result-pyxis-label {
+  font-size: 0.6875rem; /* 11px — eyebrow */
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: var(--uw-gray-light);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
-.result-field span {
-  font-size: 1rem; /* 16px */
-  font-weight: 600;
-  color: var(--uw-gray-dark);
-}
-.result-field span.location-value {
-  font-size: 1.25rem; /* 20px — primary data, deserves emphasis */
-  color: var(--uw-purple);
-  font-family: 'Source Serif 4', serif;
-}
-.result-field span.pyxis-value {
+.result-pyxis-value.has-value {
   font-size: 1.0625rem; /* 17px */
+  font-weight: 700;
   color: var(--uw-teal);
 }
-.result-field span.empty {
-  color: var(--uw-gray-light);
-  font-weight: 400;
+.result-pyxis-value.no-value {
   font-size: 0.875rem; /* 14px */
+  color: var(--uw-gray-light);
   font-style: italic;
+}
+
+/* ── LOCATIONS TABLE ── */
+.loc-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: 1px solid var(--uw-gray-bg);
+}
+.loc-th {
+  padding: 8px 20px;
+  font-size: 0.6875rem; /* 11px — column header */
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--uw-gray-light);
+  text-align: left;
+  background: var(--uw-gray-bg);
+  border-bottom: 1px solid var(--uw-gray-pale);
+}
+.loc-row {
+  border-bottom: 1px solid var(--uw-gray-bg);
+}
+.loc-row:last-child { border-bottom: none; }
+.loc-row:hover { background: #faf9fc; }
+.loc-cell {
+  padding: 12px 20px;
+  vertical-align: middle;
+}
+.loc-cell--location { width: 60%; }
+.loc-cell--type     { width: 40%; }
+
+.location-value {
+  font-size: 1.125rem; /* 18px */
+  font-weight: 700;
+  color: var(--uw-purple);
+  font-family: 'Source Serif 4', serif;
+  letter-spacing: 0.2px;
 }
 
 /* ── STATES ── */
