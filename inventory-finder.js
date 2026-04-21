@@ -313,13 +313,22 @@ async function performSearch(query) {
 /* ─────────────────────────────────────────────
    RENDER
 ───────────────────────────────────────────── */
-function badgeFor(r) {
+
+// Returns a numeric sort priority: lower = higher in list
+// Forward Pick / Home locations always sort above FIFO
+function locationSortPriority(r) {
   const t = (r.type_description || '').toLowerCase();
-  if (t.includes('forward pick') && r.source === 'inventory') return ['Forward Pick',   'badge-fp'];
-  if (t.includes('first in') || t.includes('fifo'))           return ['FIFO',           'badge-fifo'];
-  if (t.includes('home') || r.source === 'location')          return ['Home Location',  'badge-home'];
-  if (r.source === 'pyxis_lookup')                            return ['Pyxis Match',    'badge-fp'];
-  return [r.type_description || 'Inventory', 'badge-fifo'];
+  if (t.includes('forward pick') || t.includes('home') || r.source === 'location') return 0;
+  return 1; // FIFO and everything else
+}
+
+function badgeFor(typeDesc, source) {
+  const t = (typeDesc || '').toLowerCase();
+  if (t.includes('forward pick') && source === 'inventory') return ['Forward Pick',  'badge-fp'];
+  if (t.includes('first in') || t.includes('fifo'))        return ['FIFO',          'badge-fifo'];
+  if (t.includes('home') || source === 'location')         return ['Home Location', 'badge-home'];
+  if (source === 'pyxis_lookup')                           return ['Pyxis Match',   'badge-fp'];
+  return [typeDesc || 'Inventory', 'badge-fifo'];
 }
 
 function renderResults(results, query) {
@@ -340,49 +349,90 @@ function renderResults(results, query) {
     return;
   }
 
-  const cards = results.map(r => {
-    const [badgeLabel, badgeClass] = badgeFor(r);
-    const loc   = r.location         || '—';
-    const pyxis = r.pyxis_id         || '';
-    const pkg   = r.package_code     || '';
-    const desc  = r.item_description || '';
+  // ── Group by item number ──
+  const groups = new Map(); // item# -> { meta, rows[] }
+  for (const r of results) {
+    if (!groups.has(r.item)) {
+      groups.set(r.item, {
+        item:             r.item,
+        item_description: r.item_description,
+        package_code:     r.package_code,
+        pyxis_id:         r.pyxis_id,
+        rows:             [],
+      });
+    }
+    const g = groups.get(r.item);
+    // Prefer non-empty values for item-level metadata
+    if (!g.item_description && r.item_description) g.item_description = r.item_description;
+    if (!g.package_code     && r.package_code)     g.package_code     = r.package_code;
+    if (!g.pyxis_id         && r.pyxis_id)         g.pyxis_id         = r.pyxis_id;
+    g.rows.push(r);
+  }
+
+  // Sort each group: Forward Pick / Home first, FIFO below
+  for (const g of groups.values()) {
+    g.rows.sort((a, b) => locationSortPriority(a) - locationSortPriority(b));
+  }
+
+  const totalItems     = groups.size;
+  const totalLocations = results.length;
+
+  const cards = [...groups.values()].map(g => {
+    const pyxis = g.pyxis_id      || '';
+    const pkg   = g.package_code  || '';
+    const desc  = g.item_description || g.item;
+
+    const locationRows = g.rows.map(r => {
+      const [badgeLabel, badgeClass] = badgeFor(r.type_description, r.source);
+      return `
+        <tr class="loc-row">
+          <td class="loc-cell loc-cell--location">
+            <span class="location-value">${escHtml(r.location || '—')}</span>
+          </td>
+          <td class="loc-cell loc-cell--type">
+            <span class="result-type-badge ${badgeClass}">${escHtml(badgeLabel)}</span>
+          </td>
+        </tr>`;
+    }).join('');
+
     return `
       <div class="result-card">
         <div class="result-card-header">
-          <span class="result-type-badge ${badgeClass}">${escHtml(badgeLabel)}</span>
           <div class="result-title">
-            <div class="result-item-desc">${escHtml(desc || r.item)}</div>
-            <div class="result-item-num">Item #: ${escHtml(r.item)}</div>
+            <div class="result-item-desc">${escHtml(desc)}</div>
+            <div class="result-item-meta">
+              <span class="result-item-num">Item #: ${escHtml(g.item)}</span>
+              ${pkg ? `<span class="result-item-pkg">NDC: ${escHtml(pkg)}</span>` : ''}
+            </div>
           </div>
-        </div>
-        <div class="result-card-body">
-          <div class="result-field">
-            <label>Location</label>
-            <span class="location-value">${escHtml(loc)}</span>
-          </div>
-          <div class="result-field">
-            <label>Pyxis ID</label>
-            <span class="${pyxis ? 'pyxis-value' : 'empty'}">
+          <div class="result-pyxis-block">
+            <div class="result-pyxis-label">Pyxis ID</div>
+            <div class="result-pyxis-value ${pyxis ? 'has-value' : 'no-value'}">
               ${pyxis ? escHtml(pyxis) : 'Not mapped'}
-            </span>
-          </div>
-          ${pkg ? `
-          <div class="result-field">
-            <label>NDC / Package Code</label>
-            <span>${escHtml(pkg)}</span>
-          </div>` : ''}
-          <div class="result-field">
-            <label>Location Type</label>
-            <span>${escHtml(r.type_description || '—')}</span>
+            </div>
           </div>
         </div>
+        <table class="loc-table">
+          <thead>
+            <tr>
+              <th class="loc-th">Location</th>
+              <th class="loc-th">Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${locationRows}
+          </tbody>
+        </table>
       </div>`;
   }).join('');
 
   area.innerHTML = `
     <div class="results-header">
       <span class="results-count">
-        <strong>${results.length}</strong> result${results.length !== 1 ? 's' : ''} for "${escHtml(query)}"
+        <strong>${totalItems}</strong> item${totalItems !== 1 ? 's' : ''}
+        &nbsp;&middot;&nbsp;
+        <strong>${totalLocations}</strong> location${totalLocations !== 1 ? 's' : ''}
+        &nbsp;for "${escHtml(query)}"
       </span>
       <button class="debug-toggle-btn" onclick="toggleDebug()">Debug log</button>
     </div>
