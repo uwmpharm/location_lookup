@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    
+    <link rel="stylesheet" href="admin.css">
+    <script src="supabase-js.min.js"></script>
+    <script src="xlsx.full.min.js"></script>
+    </head>
+<body>
+    <div id="gate">
+        <div class="gate-card">
+            <h3>Enter Admin Password:</h3>
+            <input type="password" id="passwordInput" placeholder="Password">
+            <button id="submitPassword">Submit</button>
+            <p id="errorMessage" style="display: none; color: red;">Incorrect Password.</p>
+        </div>
+    </div>
+
+    <div id="adminPanel" style="display: none;">
+        <h1>Data Update <button id="logout-btn">Log out</button></h1>
+        <div id="uploader">
+            <p>Upload an Excel file to update the database:</p>
+            <p class="sup-subtitle">Select an <strong>.xls</strong> or <strong>.xlsx</strong> file to sync data into the database.</p>
+        </div>
+
+        <div id="selector">
+            <label for="tableSelect">Select Table:</label>
+            <select id="tableSelect">
+                <option value="">Select table to update</option>
+                <option value="table1">dms_extsys_item_valid</option>
+                <option value="table2">wms_iv_f</option>
+                <option value="table3">wms_lc_f</option>
+            </select>
+        </div>
+        <div id="dropzone">
+            <p id="dropzoneText">Drag and drop your file here, or click to select a file.</p>
+            <input type="file" id="fileInput" accept=".xls,.xlsx" style="display: none;">
+        </div>
+        <div id="fileInfo">
+            <span id="fileName"></span>
+            <button id="removeButton" disabled>Remove</button>
+        </div>
+        <button id="uploadButton" disabled>Upload</button>
+        <div id="progressContainer">
+            <div id="progressBar">
+                <div id="progressBarFill"></div>
+            </div>
+        </div>
+        <div id="statusDisplay"></div>
+        <div id="errorDisplay" style="color: red;"></div>
+    </div>
+
+    <script src="local.js"></script>
+    <script src="update.js"></script>
+</body>
+</html>

@@ -1,9 +1,8 @@
 /* inventory-finder.js */
-/* Requires @supabase/supabase-js v2 loaded before this script */
-
+/* Uses the local Supabase-compatible client loaded before this script. */
 const SUPABASE_URL = 'https://iynuqsbgnshlromwkzfl.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5bnVxc2JnbnNobHJvbXdremZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDQ5NzcsImV4cCI6MjA5MTA4MDk3N30.SGvfrCXQbgbZk_ptt97R3sYGetFdB6KfRmJvoF1LpGI';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.inventorySb || (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null);
 
 const SITE_SYSTEM_MAP = {
   'HMC-MAIN':  'HMC-PYXIS',
@@ -20,6 +19,56 @@ let currentSite      = null;
 let searchTimeout    = null;
 let selectedGateOption = null;
 
+const OFFLINE_CACHE_NAME = 'inventory-finder-cache-v3';
+const OFFLINE_TABLE_FILES = [
+  './test_dms_extsys_item_valid.json',
+  './test_wms_iv_f.json',
+  './test_wms_lc_f.json',
+];
+
+async function loadOfflineJson(url) {
+  if (!('caches' in window)) {
+    const response = await fetch(url, { cache: 'reload' });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  const cache = await caches.open(OFFLINE_CACHE_NAME);
+  const cachedResponse = await cache.match(url);
+  if (cachedResponse && cachedResponse.ok) {
+    return cachedResponse.json();
+  }
+
+  const response = await fetch(url, { cache: 'reload' });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+  }
+
+  await cache.put(url, response.clone());
+  return response.json();
+}
+
+async function warmOfflineCache() {
+  if (!('caches' in window)) return;
+
+  try {
+    const cache = await caches.open(OFFLINE_CACHE_NAME);
+    await Promise.all(OFFLINE_TABLE_FILES.map(async (url) => {
+      try {
+        const response = await fetch(url, { cache: 'reload' });
+        if (response.ok) {
+          await cache.put(url, response.clone());
+        }
+      } catch (err) {
+        console.warn(`Offline cache warm failed for ${url}`, err);
+      }
+    }));
+  } catch (err) {
+    console.warn('Offline cache warm failed:', err);
+  }
+}
 /* ─────────────────────────────────────────────
    DEBUG
 ───────────────────────────────────────────── */
@@ -113,13 +162,36 @@ function showIdle() {
     </div>`;
 }
 
+function updateConnectionStatus() {
+  console.log('updateConnectionStatus called, online:', navigator.onLine);
+  const status = document.getElementById('connection-status');
+  console.log('status element:', status);
+  if(!status) return;
+  if (navigator.onLine) {
+        status.className = 'connection-status online';
+        status.textContent = 'Online';
+    } else {
+        status.className = 'connection-status offline';
+        status.textContent = 'Offline — Showing Cached Data (Requires precise search terms)';
+    }
+}
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+window.addEventListener('load', warmOfflineCache);
+updateConnectionStatus();
+
 /* ─────────────────────────────────────────────
    FUZZY WATERFALL SEARCH
 ───────────────────────────────────────────── */
 async function performSearch(query) {
-  if (!currentSite) return;
-  const area = document.getElementById('results-area');
-  area.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Searching inventory…</p></div>';
+  if(navigator.onLine){
+    if (!currentSite) return;
+  if (!sb) {
+    debugLog('ERROR', 'Supabase client is not available');
+    return;
+  }
+  const resultsArea = document.getElementById('results-area');
+  resultsArea.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Searching inventory…</p></div>';
   
   debugLog('SEARCH-START', `"${query}" @ "${currentSite}" (Length: ${currentSite.length})`);
 
@@ -148,7 +220,7 @@ async function performSearch(query) {
 
   } catch (err) {
     debugLog('ERROR', err.message);
-    area.innerHTML = `
+    resultsArea.innerHTML = `
       <div class="error-banner">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2" stroke-linecap="round">
@@ -159,7 +231,7 @@ async function performSearch(query) {
         <div>
           <strong>Query failed.</strong> ${escHtml(err.message)}
           <br>
-          <button class="debug-toggle-btn" onclick="toggleDebug()" style="margin-top:6px;">
+          <button class="debug-toggle-btn" style="margin-top:6px;">
             Show debug log
           </button>
         </div>
@@ -172,7 +244,163 @@ async function performSearch(query) {
       if (p) p.textContent = debugLines.join('\n');
     }, 0);
   }
+  } else {
+    console.log('Offline fetching JSON files');
+    const resultsArea = document.getElementById('results-area');
+    if (!currentSite) {
+      resultsArea.innerHTML = `
+        <div class="error-banner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8"  x2="12"    y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>
+            <strong>Offline search is available,</strong> but no site is selected.
+            Please choose a site first.
+          </div>
+        </div>`;
+      return;
+    }
+
+    try {
+      const [table1, table2, table3] = await Promise.all([
+        loadOfflineJson('./test_dms_extsys_item_valid.json').then(data => { console.log('table1 fetched'); return data; }),
+        loadOfflineJson('./test_wms_iv_f.json').then(data => { console.log('table2 fetched'); return data; }),
+        loadOfflineJson('./test_wms_lc_f.json').then(data => { console.log('table3 fetched'); return data; }),
+      ]);
+
+      //const normalizeText = (value) => String(value || '').trim().toLowerCase();
+      //const queryTerms = normalizeText(query).split(/\s+/).filter(Boolean);
+      /*const matchesQuery = (item) => {
+        const haystack = Object.values(item)
+          .filter(val => val !== null && val !== undefined)
+          .map(val => normalizeText(val))
+          .join(' ');
+
+        if (!haystack) return false;
+        if (normalizeText(query) && haystack.includes(normalizeText(query))) return true;
+
+        return queryTerms.every(term => haystack.includes(term));
+      };*/
+
+      
+      const siteKey = String(currentSite || '').trim().toUpperCase();
+      const systemKey = SITE_SYSTEM_MAP[currentSite] ? String(SITE_SYSTEM_MAP[currentSite]).trim().toUpperCase() : '';
+      const siteCandidates = [siteKey, systemKey].filter(Boolean);
+
+      const matchesSite = (item) => {
+        if (!currentSite) return true;
+        const values = [item.site, item.pharmacy, item.external_system_name, item.site_name, item.system_name]
+          .filter(Boolean)
+          .map(value => String(value).trim().toUpperCase());
+        return values.some(value => siteCandidates.includes(value));
+      };
+
+      const fuseOptions = {
+        threshold: 0.1,
+        keys: [
+          'item',
+          'item_description',
+          'external_item_description',
+          'description_1',
+          'external_item',
+          'uom',
+          'location',
+          'forward_pick_item',
+        ]
+      };
+
+      const allItems = [
+        ...(table1 || []).filter(item => matchesSite(item)), 
+        ...(table2 || []).filter(item => matchesSite(item)), 
+        ...(table3 || []).filter(item => matchesSite(item))
+      ];
+
+      const fuse = new Fuse(allItems, fuseOptions);
+      const fuseResults = fuse.search(query);
+      const matchedItems = fuseResults.map(result => result.item);
+
+      const results = fuseResults.map(({ item }) => ({  
+          source: item.location_type ? item.location_type.toLowerCase() : 'inventory',
+          item: item.item || item.forward_pick_item || item.external_item || '',
+          item_description: item.item_description || item.external_item_description || item.description_1 || '',
+          package_code: item.uom || item.uom_1 || item.external_item_uom || '',
+          location: item.location || item.actual_location || '',
+          type_description: item.location_type || item.type_description || item.type || 'Inventory',
+          pyxis_id: item.pyxis_id || item.external_item || null
+      }));
+      //const dmsRows = (table1 || []).filter(item => matchesSite(item) && matchesQuery(item));
+      //const ivfRows = (table2 || []).filter(item => matchesSite(item) && matchesQuery(item));
+      //const siteLcfRows = (table3 || []).filter(item => matchesSite(item));
+      //const lcfRows = siteLcfRows.filter(item => matchesQuery(item));
+
+      //const itemNumbers = new Set();
+      /*dmsRows.forEach(row => { if (row.item) itemNumbers.add(String(row.item)); });
+      ivfRows.forEach(row => { if (row.item) itemNumbers.add(String(row.item)); });
+      lcfRows.forEach(row => {
+        const item = row.forward_pick_item || row.item;
+        if (item) itemNumbers.add(String(item));
+      });
+
+      //const results = [...itemNumbers].flatMap(itemNumber => {
+        const dmsRow = dmsRows.find(row => String(row.item) === itemNumber);
+        const ivfRow = ivfRows.find(row => String(row.item) === itemNumber);
+        const lcfMatches = siteLcfRows.filter(row => String(row.forward_pick_item || row.item) === itemNumber);
+        const itemDescription = ivfRow?.item_description || dmsRow?.item_description || dmsRow?.external_item_description || '';
+        const packageCode = ivfRow?.uom || ivfRow?.uom_1 || dmsRow?.external_item_uom || '';
+        const pyxisId = dmsRow?.external_item || dmsRow?.pyxis_id || null;
+
+        if (lcfMatches.length > 0) {
+          return lcfMatches.map(loc => ({
+            source: 'location',
+            item: itemNumber,
+            item_description: itemDescription,
+            package_code: packageCode,
+            location: loc.location || loc.actual_location || '',
+            type_description: loc.type_description || loc.type || loc.location_status || '',
+            pyxis_id: pyxisId
+          }));
+        }
+
+        if (dmsRow || ivfRow) {
+          return [{
+            source: ivfRow ? 'inventory' : 'dms',
+            item: itemNumber,
+            item_description: itemDescription,
+            package_code: packageCode,
+            location: '',
+            type_description: ivfRow?.type_description || dmsRow?.type_description || 'Inventory',
+            pyxis_id: pyxisId
+          }];
+        }
+
+        return [];
+      });*/
+
+      console.log('results found:', results.length);
+      console.log('currentSite:', currentSite);
+      console.log('query:', query);
+      renderResults(results, query);
+    } catch (err) {
+      debugLog('OFFLINE-ERROR', err.message);
+      resultsArea.innerHTML = `
+        <div class="error-banner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8"  x2="12"    y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>
+            <strong>Offline lookup failed.</strong> ${escHtml(err.message)}
+          </div>
+        </div>`;
+    }
+  }
 }
+
 
 /* ─────────────────────────────────────────────
    RENDER WITH DEDUPLICATION & SORTING
@@ -317,7 +545,7 @@ function renderResults(results, query) {
         <strong>${totalLocationsCount}</strong> unique location${totalLocationsCount !== 1 ? 's' : ''}
         &nbsp;for "${escHtml(query)}"
       </span>
-      <button class="debug-toggle-btn" onclick="toggleDebug()">Debug log</button>
+      <button class="debug-toggle-btn">Debug log</button>
     </div>
     <div id="debug-wrap" class="debug-wrap">
       <pre id="debug-panel" class="debug-panel">${debugLines.join('\n')}</pre>

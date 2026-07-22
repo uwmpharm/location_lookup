@@ -10,6 +10,7 @@
 
 <!-- ── SITE GATE OVERLAY ── -->
 <div id="gate-overlay">
+  <a href="admin.html" id="update-btn">Update</a>
   <div class="gate-card">
     <div class="gate-logo">
       <div class="gate-logo-title">UW Medicine</div>
@@ -20,7 +21,7 @@
     <p>Select your pharmacy site to begin. This tool provides item locations and Pyxis IDs during system downtime.</p>
     <div class="gate-options" id="gate-options">
 
-      <button class="gate-option" data-site="HMC-MAIN" data-system="HMC-PYXIS" onclick="selectSite(this)">
+      <button class="gate-option" data-site="HMC-MAIN" data-system="HMC-PYXIS">
         <div class="gate-option-dot"></div>
         <div class="gate-option-info">
           <div class="gate-option-name">Harborview Medical Center</div>
@@ -28,7 +29,7 @@
         </div>
       </button>
 
-      <button class="gate-option" data-site="UWMC-MAIN" data-system="UWMC-PYXIS" onclick="selectSite(this)">
+      <button class="gate-option" data-site="UWMC-MAIN" data-system="UWMC-PYXIS">
         <div class="gate-option-dot"></div>
         <div class="gate-option-info">
           <div class="gate-option-name">Montlake Campus</div>
@@ -36,7 +37,7 @@
         </div>
       </button>
 
-      <button class="gate-option" data-site="NWH-MAIN" data-system="NWH-PYXIS" onclick="selectSite(this)">
+      <button class="gate-option" data-site="NWH-MAIN" data-system="NWH-PYXIS">
         <div class="gate-option-dot"></div>
         <div class="gate-option-info">
           <div class="gate-option-name">Northwest Campus</div>
@@ -45,7 +46,7 @@
       </button>
 
     </div>
-    <button class="gate-btn" id="gate-btn" disabled onclick="confirmSite()">Continue →</button>
+    <button class="gate-btn" id="gate-btn" disabled>Continue →</button>
   </div>
 </div>
 
@@ -62,7 +63,7 @@
     </div>
     <div class="site-selector-header">
       <label for="header-site">Site:</label>
-      <select class="site-select" id="header-site" onchange="changeSiteFromHeader(this.value)">
+      <select class="site-select" id="header-site">
         <option value="">— Select Site —</option>
         <option value="HMC-MAIN">Harborview (HMC-MAIN)</option>
         <option value="UWMC-MAIN">Montlake (UWMC-MAIN)</option>
@@ -82,7 +83,7 @@
   </svg>
   DOWNTIME TOOL — For use when PIMS is unavailable. Last Updated: 5/20/26
 </div>
-
+<div id="connection-status" class="connection-status"></div>
 <!-- ── MAIN ── -->
 <main>
 
@@ -94,6 +95,7 @@
     </svg>
     <span id="site-badge-text"></span>
   </div>
+
 
   <div class="search-section">
     <label class="search-label" for="search-input">
@@ -112,11 +114,10 @@
         id="search-input"
         class="search-input"
         placeholder="e.g. senna, 12394, or G1234"
-        oninput="onSearchInput(this.value)"
         autocomplete="off"
         spellcheck="false"
       />
-      <button class="search-clear" id="search-clear" title="Clear search" onclick="clearSearch()">
+      <button class="search-clear" id="search-clear" title="Clear search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2.5" stroke-linecap="round">
           <line x1="18" y1="6"  x2="6"  y2="18"/>
@@ -144,10 +145,10 @@
   <strong>UW Medicine</strong> · Inventory Finder · Downtime Tool · For authorized staff use only
 </footer>
 
-<!-- Supabase JS client (must load before inventory-finder.js) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- App logic -->
+<!-- Local scripts only, compatible with CSP: script-src 'self' -->
+<script src="supabase-js.min.js"></script>
+<script src="local.js"></script>
+<script src="fuse.min.js"></script>
 <script src="inventory-finder.js"></script>
-
 </body>
 </html>
